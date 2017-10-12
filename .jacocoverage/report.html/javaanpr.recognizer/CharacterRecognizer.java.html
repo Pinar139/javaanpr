@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CharacterRecognizer.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.recognizer</a> &gt; <span class="el_source">CharacterRecognizer.java</span></div><h1>CharacterRecognizer.java</h1><pre class="source lang-java linenums">
+
+package javaanpr.recognizer;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Vector;
+import javaanpr.imageanalysis.Char;
+
+public abstract class CharacterRecognizer {
+    
+     
+<span class="fc" id="L17">    public static char[] alphabet = {</span>
+        '0','1','2','3','4','5','6','7','8','9','A','B','C',
+        'D','E','F','G','H','I','J','K','L','M','N','O','P',
+        'Q','R','S','T','U','V','W','X','Y','Z'
+    };
+    
+<span class="fc" id="L23">    public static float[][] features = {</span>
+        {0,1,0,1}, 
+        {1,0,1,0}, 
+        {0,0,1,1}, 
+        {1,1,0,0}, 
+        {0,0,0,1},        
+        {1,0,0,0}, 
+        {1,1,1,0},        
+        {0,1,1,1},
+        {0,0,1,0},         
+        {0,1,0,0},
+        {1,0,1,1},        
+        {1,1,0,1}      
+    };
+    
+    public class RecognizedChar {
+        public class RecognizedPattern {
+            private final char chr;
+            private final float cost;
+<span class="fc" id="L42">            RecognizedPattern(char chr, float value) {</span>
+<span class="fc" id="L43">                this.chr = chr;</span>
+<span class="fc" id="L44">                this.cost = value;</span>
+<span class="fc" id="L45">            }</span>
+            public char getChar() {
+<span class="fc" id="L47">                return this.chr;</span>
+            }
+            public float getCost() {
+<span class="fc" id="L50">                return this.cost;</span>
+            }
+        }
+        public class PatternComparer implements Comparator {
+            int direction;
+<span class="fc" id="L55">            public PatternComparer(int direction) {</span>
+<span class="fc" id="L56">                this.direction = direction;</span>
+<span class="fc" id="L57">            }</span>
+            public int compare(Object o1, Object o2) {
+<span class="fc" id="L59">                float cost1 = ((RecognizedPattern)o1).getCost();</span>
+<span class="fc" id="L60">                float cost2 = ((RecognizedPattern)o2).getCost();</span>
+                
+<span class="fc" id="L62">                int ret = 0;</span>
+                
+<span class="fc bfc" id="L64" title="All 2 branches covered.">                if (cost1 &lt; cost2) ret = -1;</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">                if (cost1 &gt; cost2) ret =  1;</span>
+<span class="pc bpc" id="L66" title="1 of 2 branches missed.">                if (direction==1) ret *= -1;</span>
+<span class="fc" id="L67">                return ret;</span>
+            }
+        }
+        
+        private final Vector&lt;RecognizedPattern&gt; patterns;
+        private boolean isSorted;
+        
+<span class="fc" id="L74">        RecognizedChar() {</span>
+<span class="fc" id="L75">            this.patterns = new Vector&lt;RecognizedPattern&gt;();</span>
+<span class="fc" id="L76">            this.isSorted = false;</span>
+<span class="fc" id="L77">        }</span>
+        public void addPattern(RecognizedPattern pattern) {
+<span class="fc" id="L79">            this.patterns.add(pattern);</span>
+<span class="fc" id="L80">        }</span>
+        public boolean isSorted() {
+<span class="nc" id="L82">            return this.isSorted;</span>
+        }
+        public void sort(int direction) {
+<span class="pc bpc" id="L85" title="1 of 2 branches missed.">            if (this.isSorted) return;</span>
+<span class="fc" id="L86">            this.isSorted = true;</span>
+<span class="fc" id="L87">            Collections.sort(patterns, (Comparator&lt;? super RecognizedPattern&gt;)</span>
+                                       new PatternComparer(direction));
+<span class="fc" id="L89">        }</span>
+        
+        public Vector&lt;RecognizedPattern&gt; getPatterns() {
+<span class="pc bpc" id="L92" title="1 of 2 branches missed.">            if (this.isSorted) return this.patterns;</span>
+<span class="nc" id="L93">            return null; </span>
+        }
+        public RecognizedPattern getPattern(int i) {
+<span class="pc bpc" id="L96" title="1 of 2 branches missed.">            if (this.isSorted) return this.patterns.elementAt(i);</span>
+<span class="nc" id="L97">            return null;</span>
+        }
+        
+        public BufferedImage render() {
+<span class="nc" id="L101">            int width=500;</span>
+<span class="nc" id="L102">            int height=200;</span>
+<span class="nc" id="L103">            BufferedImage histogram = new BufferedImage(width+20, height+20, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L104">            Graphics2D graphic = histogram.createGraphics();</span>
+            
+<span class="nc" id="L106">            graphic.setColor(Color.LIGHT_GRAY);</span>
+<span class="nc" id="L107">            Rectangle backRect = new Rectangle(0,0,width+20,height+20);</span>
+<span class="nc" id="L108">            graphic.fill(backRect);</span>
+<span class="nc" id="L109">            graphic.draw(backRect);</span>
+            
+<span class="nc" id="L111">            graphic.setColor(Color.BLACK);</span>
+            
+<span class="nc" id="L113">            int colWidth = width / this.patterns.size();</span>
+            int left, top;
+            
+            
+<span class="nc bnc" id="L117" title="All 2 branches missed.">            for (int ay = 0; ay &lt;= 100; ay += 10) {</span>
+<span class="nc" id="L118">                int y = 15 + (int)((100 - ay) / 100.0f * (height - 20));</span>
+<span class="nc" id="L119">                graphic.drawString(Integer.toString(ay), 3 , y+11);</span>
+<span class="nc" id="L120">                graphic.drawLine(25,y+5,35,y+5);</span>
+            }
+<span class="nc" id="L122">            graphic.drawLine(35,19,35,height );</span>
+            
+<span class="nc" id="L124">            graphic.setColor(Color.BLUE);</span>
+            
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            for (int i=0; patterns.size()&gt;=i; i++) {</span>
+<span class="nc" id="L127">                left = i * colWidth + 42;</span>
+<span class="nc" id="L128">                top = height - (int)( patterns.elementAt(i).cost * (height - 20));</span>
+                
+<span class="nc" id="L130">                graphic.drawRect(</span>
+                        left,
+                        top ,
+                        colWidth - 2,
+                        height - top );
+<span class="nc" id="L135">                graphic.drawString( patterns.elementAt(i).chr+&quot; &quot; , left + 2,</span>
+                        top - 8);
+            }
+<span class="nc" id="L138">            return histogram;</span>
+        }
+    }
+    
+    
+   
+<span class="fc" id="L144">    public CharacterRecognizer() {</span>
+<span class="fc" id="L145">    }</span>
+    
+    public abstract RecognizedChar recognize(Char chr)  throws Exception;
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

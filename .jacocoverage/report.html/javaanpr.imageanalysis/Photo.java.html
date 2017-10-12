@@ -1,0 +1,393 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Photo.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">Photo.java</span></div><h1>Photo.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+//import com.sun.java_cup.internal.Main;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ConvolveOp;
+//import java.awt.image.IndexColorModel;
+import java.awt.image.Kernel;
+import java.awt.image.LookupOp;
+import java.awt.image.ShortLookupTable;
+//import java.awt.image.WritableRaster;
+import java.io.File;
+import java.io.IOException;
+//import java.util.Vector;
+import javax.imageio.ImageIO;
+//import javax.print.attribute.standard.OutputDeviceAssigned;
+import javaanpr.intelligence.Intelligence;
+//import javaanpr.recognizer.CharacterRecognizer;
+
+public class Photo {
+    public BufferedImage image;
+    
+<span class="nc" id="L28">    public Photo() {</span>
+<span class="nc" id="L29">        this.image=null;</span>
+<span class="nc" id="L30">    }</span>
+<span class="fc" id="L31">    public Photo(BufferedImage bi) {</span>
+<span class="fc" id="L32">        this.image=bi;</span>
+<span class="fc" id="L33">    }</span>
+<span class="fc" id="L34">    public Photo(String filepath) throws IOException {</span>
+<span class="fc" id="L35">        this.loadImage(filepath);</span>
+<span class="fc" id="L36">    }</span>
+    
+    public Photo clone() {
+<span class="nc" id="L39">        return new Photo(Photo.duplicateBufferedImage(this.image));</span>
+    }
+    
+    public int getWidth() {
+<span class="fc" id="L43">        return this.image.getWidth();</span>
+    }
+
+    /**
+     *
+     * @return
+     */
+    public int getHeight() {
+<span class="fc" id="L51">        return this.image.getHeight();</span>
+    }
+    public int getSquare() {
+<span class="nc" id="L54">        return this.getWidth() * this.getHeight();</span>
+    }
+    
+    public BufferedImage getBi() {
+<span class="fc" id="L58">        return this.image;</span>
+    }
+    public BufferedImage getBiWithAxes() {
+<span class="nc" id="L61">        BufferedImage axis = new BufferedImage(this.image.getWidth()+40,</span>
+<span class="nc" id="L62">                this.image.getHeight()+40, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L63">        Graphics2D graphicAxis = axis.createGraphics();</span>
+        
+<span class="nc" id="L65">        graphicAxis.setColor(Color.LIGHT_GRAY);</span>
+<span class="nc" id="L66">        Rectangle backRect = new Rectangle(0,0,this.image.getWidth()+40,this.image.getHeight()+40);</span>
+<span class="nc" id="L67">        graphicAxis.fill(backRect);</span>
+<span class="nc" id="L68">        graphicAxis.draw(backRect);</span>
+        
+<span class="nc" id="L70">        graphicAxis.drawImage(this.image,35,5,null);</span>
+        
+<span class="nc" id="L72">        graphicAxis.setColor(Color.BLACK);</span>
+<span class="nc" id="L73">        graphicAxis.drawRect(35,5,this.image.getWidth(), this.image.getHeight());</span>
+        
+<span class="nc bnc" id="L75" title="All 2 branches missed.">        for (int ax = 0; ax &lt; this.image.getWidth(); ax += 50) {</span>
+<span class="nc" id="L76">            graphicAxis.drawString(new Integer(ax).toString() , ax + 35, axis.getHeight()-10);</span>
+<span class="nc" id="L77">            graphicAxis.drawLine(ax+35, this.image.getHeight()+5 ,ax+35, this.image.getHeight()+15);</span>
+        }
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        for (int ay = 0; ay &lt; this.image.getHeight(); ay += 50) {</span>
+<span class="nc" id="L80">            graphicAxis.drawString(new Integer(ay).toString(), 3 ,ay + 15);</span>
+<span class="nc" id="L81">            graphicAxis.drawLine(25,ay+5,35,ay+5);</span>
+        }
+<span class="nc" id="L83">        graphicAxis.dispose();</span>
+<span class="nc" id="L84">        return axis;</span>
+    }
+    
+    public void setBrightness(int x, int y, float value) {
+<span class="nc" id="L88">        image.setRGB(x,y, new Color(value,value,value).getRGB() );</span>
+<span class="nc" id="L89">    }</span>
+    static public void setBrightness(BufferedImage image, int x, int y, float value) {
+<span class="fc" id="L91">        image.setRGB(x,y, new Color(value,value,value).getRGB() );</span>
+<span class="fc" id="L92">    }</span>
+    
+    static public float getBrightness(BufferedImage image, int x, int y) {
+<span class="fc" id="L95">        int r = image.getRaster().getSample(x,y,0);</span>
+<span class="fc" id="L96">        int g = image.getRaster().getSample(x,y,1);</span>
+<span class="fc" id="L97">        int b = image.getRaster().getSample(x,y,2);</span>
+<span class="fc" id="L98">        float[] hsb = Color.RGBtoHSB(r,g,b,null);</span>
+<span class="fc" id="L99">        return hsb[2];</span>
+    }
+    static public float getSaturation(BufferedImage image, int x, int y) {
+<span class="fc" id="L102">        int r = image.getRaster().getSample(x,y,0);</span>
+<span class="fc" id="L103">        int g = image.getRaster().getSample(x,y,1);</span>
+<span class="fc" id="L104">        int b = image.getRaster().getSample(x,y,2);</span>
+
+<span class="fc" id="L106">        float[] hsb = Color.RGBtoHSB(r,g,b,null);</span>
+<span class="fc" id="L107">        return hsb[1];</span>
+    }
+    static public float getHue(BufferedImage image, int x, int y) {
+<span class="fc" id="L110">        int r = image.getRaster().getSample(x,y,0);</span>
+<span class="fc" id="L111">        int g = image.getRaster().getSample(x,y,1);</span>
+<span class="fc" id="L112">        int b = image.getRaster().getSample(x,y,2);</span>
+
+<span class="fc" id="L114">        float[] hsb = Color.RGBtoHSB(r,g,b,null);</span>
+<span class="fc" id="L115">        return hsb[0];</span>
+    }
+    
+    public float getBrightness(int x, int y) {
+<span class="fc" id="L119">        return getBrightness(image,x,y);</span>
+    }
+    public float getSaturation(int x, int y) {
+<span class="nc" id="L122">        return getSaturation(image,x,y);</span>
+    }
+    public float getHue(int x, int y) {
+<span class="nc" id="L125">        return getHue(image,x,y);</span>
+    }
+    
+    public void loadImage(String filepath) throws IOException {
+        try {
+<span class="fc" id="L130">            File source = new File(filepath);</span>
+<span class="fc" id="L131">            BufferedImage image = ImageIO.read(source);</span>
+<span class="fc" id="L132">            BufferedImage outimage = new BufferedImage(image.getWidth(),image.getHeight(), BufferedImage.TYPE_INT_RGB);</span>
+<span class="fc" id="L133">            Graphics2D g = outimage.createGraphics();</span>
+<span class="fc" id="L134">            g.drawImage(image, 0, 0, null);</span>
+<span class="fc" id="L135">            g.dispose();</span>
+<span class="fc" id="L136">            this.image = outimage;</span>
+<span class="nc" id="L137">        } catch (IOException ex) {</span>
+<span class="nc" id="L138">            throw new IOException(&quot;{Error in image loader} Couldn't read input file &quot;+filepath);</span>
+<span class="fc" id="L139">        }</span>
+<span class="fc" id="L140">    }</span>
+    public void saveImage(String filepath) throws IOException {
+<span class="nc" id="L142">        String type = new String(filepath.substring(filepath.lastIndexOf('.')+1,filepath.length()).toUpperCase());</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (!type.equals(&quot;BMP&quot;) &amp;&amp;</span>
+<span class="nc bnc" id="L144" title="All 2 branches missed.">                !type.equals(&quot;JPG&quot;) &amp;&amp;</span>
+<span class="nc bnc" id="L145" title="All 2 branches missed.">                !type.equals(&quot;JPEG&quot;) &amp;&amp;</span>
+<span class="nc bnc" id="L146" title="All 2 branches missed.">                !type.equals(&quot;PNG&quot;)</span>
+<span class="nc" id="L147">                ) throw new IOException(&quot;Unsupported file format&quot;);</span>
+<span class="nc" id="L148">        File destination = new File(filepath);</span>
+<span class="nc" id="L149">        ImageIO.write(this.image, type, destination);</span>
+<span class="nc" id="L150">    }</span>
+    
+    public void normalizeBrightness(float coef) {
+<span class="fc" id="L153">        Statistics stats = new Statistics(this);</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">        for (int x=0; x&lt;this.getWidth(); x++) {</span>
+<span class="fc bfc" id="L155" title="All 2 branches covered.">            for (int y=0; y&lt;this.getHeight(); y++) {</span>
+<span class="fc" id="L156">                this.setBrightness(this.image,x,y,</span>
+<span class="fc" id="L157">                        stats.thresholdBrightness(this.getBrightness(this.image,x,y), coef)</span>
+                        );
+            }
+        }
+<span class="fc" id="L161">    }</span>
+    
+    // FILTERS
+    public void linearResize(int width, int height) {
+<span class="nc" id="L165">        this.image = linearResizeBi(this.image,width,height);</span>
+<span class="nc" id="L166">    }</span>
+    static public BufferedImage linearResizeBi(BufferedImage origin, int width, int height) {
+<span class="fc" id="L168">        BufferedImage resizedImage = new BufferedImage(width, height ,BufferedImage.TYPE_INT_RGB);</span>
+<span class="fc" id="L169">        Graphics2D g = resizedImage.createGraphics();</span>
+<span class="fc" id="L170">        float xScale = (float)width / origin.getWidth();</span>
+<span class="fc" id="L171">        float yScale = (float)height / origin.getHeight();</span>
+<span class="fc" id="L172">        AffineTransform at = AffineTransform.getScaleInstance(xScale,yScale);</span>
+<span class="fc" id="L173">        g.drawRenderedImage(origin,at);</span>
+<span class="fc" id="L174">        g.dispose();</span>
+<span class="fc" id="L175">        return resizedImage;</span>
+    }
+    public void averageResize(int width, int height) {
+<span class="fc" id="L178">        this.image = averageResizeBi(this.image,width,height);</span>
+<span class="fc" id="L179">    }</span>
+    // TODO : nefunguje dobre pre znaky podobnej velkosti ako cielvoa velkost
+    public BufferedImage averageResizeBi(BufferedImage origin, int width, int height) {
+        
+<span class="fc bfc" id="L183" title="All 4 branches covered.">        if (origin.getWidth() &lt; width || origin.getHeight() &lt; height)</span>
+<span class="fc" id="L184">            return linearResizeBi(origin,width,height); // average height sa nehodi</span>
+        // na zvacsovanie, preto ak zvacsujeme v smere x alebo y, pouzijeme
+        // radsej linearnu transformaciu
+        
+        /* java api standardne zmensuje obrazky bilinearnou metodou, resp. linear mapping.
+         * co so sebou prinasa dost velku stratu informacie. Idealna by bola fourierova
+         * transformacia, ale ta neprichadza do uvahy z dovodu velkej cesovej narocnosti
+         * preto sa ako optimalna javi metoda WEIGHTED AVERAGE
+         */
+<span class="fc" id="L193">        BufferedImage resized = new BufferedImage(width, height ,BufferedImage.TYPE_INT_RGB);</span>
+        
+<span class="fc" id="L195">        float xScale = (float)origin.getWidth() / width;</span>
+<span class="fc" id="L196">        float yScale = (float)origin.getHeight() / height;</span>
+        
+<span class="fc bfc" id="L198" title="All 2 branches covered.">        for (int x=0; x&lt;width; x++) {</span>
+<span class="fc" id="L199">            int x0min = Math.round(x * xScale);</span>
+<span class="fc" id="L200">            int x0max = Math.round((x+1) * xScale);</span>
+            
+<span class="fc bfc" id="L202" title="All 2 branches covered.">            for (int y=0; y&lt;height; y++) {</span>
+<span class="fc" id="L203">                int y0min = Math.round(y * yScale);</span>
+<span class="fc" id="L204">                int y0max = Math.round((y+1) * yScale);</span>
+                
+                // spravit priemer okolia a ulozit do resizedImage;
+<span class="fc" id="L207">                float sum = 0;</span>
+<span class="fc" id="L208">                int sumCount = 0;</span>
+                
+<span class="fc bfc" id="L210" title="All 2 branches covered.">                for (int x0 = x0min; x0 &lt; x0max; x0++) {</span>
+<span class="fc bfc" id="L211" title="All 2 branches covered.">                    for (int y0 = y0min; y0 &lt; y0max; y0++) {</span>
+<span class="fc" id="L212">                        sum += getBrightness(origin,x0,y0);</span>
+<span class="fc" id="L213">                        sumCount++;</span>
+                    }
+                }
+<span class="fc" id="L216">                sum /= sumCount;</span>
+<span class="fc" id="L217">                setBrightness(resized, x, y, sum);</span>
+                //
+            }
+        }
+<span class="fc" id="L221">        return resized;</span>
+    }
+    
+    public Photo duplicate() {
+<span class="fc" id="L225">        return new Photo(duplicateBufferedImage(this.image));</span>
+    }
+    static public BufferedImage duplicateBufferedImage(BufferedImage image) {
+<span class="fc" id="L228">        BufferedImage imageCopy = new BufferedImage(image.getWidth(),image.getHeight(),BufferedImage.TYPE_INT_RGB);</span>
+<span class="fc" id="L229">        imageCopy.setData(image.getData());</span>
+<span class="fc" id="L230">        return imageCopy;</span>
+    }
+    
+    static void thresholding(BufferedImage bi) { // TODO: optimalizovat
+<span class="fc" id="L234">        short[] threshold = new short[256];</span>
+<span class="fc bfc" id="L235" title="All 2 branches covered.">        for (short i=0; i&lt;36; i++) threshold[i] = 0;</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        for (short i=36; i&lt;256; i++) threshold[i]=i;</span>
+<span class="fc" id="L237">        BufferedImageOp thresholdOp = new LookupOp(new ShortLookupTable(0, threshold), null);</span>
+<span class="fc" id="L238">        thresholdOp.filter(bi, bi);</span>
+<span class="fc" id="L239">    }</span>
+
+    public void verticalEdgeDetector(BufferedImage source) {
+<span class="nc" id="L242">        BufferedImage destination = duplicateBufferedImage(source);</span>
+
+<span class="nc" id="L244">        float data1[] = {</span>
+            -1,0,1,
+            -2,0,2,
+            -1,0,1,
+        };
+
+<span class="nc" id="L250">        float data2[] = {</span>
+            1,0,-1,
+            2,0,-2,
+            1,0,-1,
+        };
+
+<span class="nc" id="L256">        new ConvolveOp(new Kernel(3, 3, data1), ConvolveOp.EDGE_NO_OP, null).filter(destination, source);</span>
+<span class="nc" id="L257">    }</span>
+    
+
+    public float[][] bufferedImageToArray(BufferedImage image, int w, int h) {
+<span class="fc" id="L261">        float[][] array = new float[w][h];</span>
+<span class="fc bfc" id="L262" title="All 2 branches covered.">        for (int x=0; x&lt;w; x++) {</span>
+<span class="fc bfc" id="L263" title="All 2 branches covered.">            for (int y=0; y&lt;h; y++) {</span>
+<span class="fc" id="L264">                array[x][y] = Photo.getBrightness(image,x,y);</span>
+            }
+        }
+<span class="fc" id="L267">        return array;</span>
+    }
+
+    public float[][] bufferedImageToArrayWithBounds(BufferedImage image, int w, int h) {
+<span class="nc" id="L271">        float[][] array = new float[w+2][h+2];</span>
+
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        for (int x=0; x&lt;w; x++) {</span>
+<span class="nc bnc" id="L274" title="All 2 branches missed.">            for (int y=0; y&lt;h; y++) {</span>
+<span class="nc" id="L275">                array[x+1][y+1] = Photo.getBrightness(image,x,y);</span>
+            }
+        }
+        // vynulovat hrany :
+<span class="nc bnc" id="L279" title="All 2 branches missed.">        for (int x=0; x&lt;w+2; x++) {</span>
+<span class="nc" id="L280">            array[x][0] = 1;</span>
+<span class="nc" id="L281">            array[x][h+1] = 1;</span>
+        }
+<span class="nc bnc" id="L283" title="All 2 branches missed.">        for (int y=0; y&lt;h+2; y++) {</span>
+<span class="nc" id="L284">            array[0][y] = 1;</span>
+<span class="nc" id="L285">            array[w+1][y] = 1;</span>
+        }
+<span class="nc" id="L287">        return array;</span>
+    }    
+    
+    static public BufferedImage arrayToBufferedImage(float[][] array, int w, int h) {
+<span class="fc" id="L291">        BufferedImage bi = new BufferedImage(w,h,BufferedImage.TYPE_INT_RGB);</span>
+<span class="fc bfc" id="L292" title="All 2 branches covered.">        for (int x=0; x&lt;w; x++) {</span>
+<span class="fc bfc" id="L293" title="All 2 branches covered.">            for (int y=0; y&lt;h; y++) {</span>
+<span class="fc" id="L294">                Photo.setBrightness(bi,x,y,array[x][y]);</span>
+            }
+        }
+<span class="fc" id="L297">        return bi;</span>
+    }    
+    
+    
+    static public BufferedImage createBlankBi(BufferedImage image) {
+<span class="fc" id="L302">        BufferedImage imageCopy = new BufferedImage(image.getWidth(),image.getHeight(),BufferedImage.TYPE_INT_RGB);</span>
+<span class="fc" id="L303">        return imageCopy;</span>
+    }
+    public BufferedImage createBlankBi(int width, int height) {
+<span class="nc" id="L306">        BufferedImage imageCopy = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L307">        return imageCopy;</span>
+    }
+    
+    public BufferedImage sumBi(BufferedImage bi1, BufferedImage bi2) { //used by edgeDetectors
+<span class="nc" id="L311">        BufferedImage out = new BufferedImage(Math.min(bi1.getWidth(), bi2.getWidth()),</span>
+<span class="nc" id="L312">                Math.min(bi1.getHeight(), bi2.getHeight()),</span>
+                BufferedImage.TYPE_INT_RGB);
+        
+<span class="nc bnc" id="L315" title="All 2 branches missed.">        for (int x=0; x&lt;out.getWidth(); x++)</span>
+<span class="nc bnc" id="L316" title="All 2 branches missed.">            for (int y=0; y&lt;out.getHeight(); y++) {</span>
+<span class="nc" id="L317">            Photo.setBrightness(out,x,y, (float)Math.min(1.0, Photo.getBrightness(bi1,x,y) + Photo.getBrightness(bi2,x,y) ) );</span>
+            }
+<span class="nc" id="L319">        return out;</span>
+    }
+    
+    public void plainThresholding(Statistics stat) {
+<span class="nc" id="L323">        int w = this.getWidth();</span>
+<span class="nc" id="L324">        int h = this.getHeight();</span>
+<span class="nc bnc" id="L325" title="All 2 branches missed.">        for (int x=0; x&lt;w; x++) {</span>
+<span class="nc bnc" id="L326" title="All 2 branches missed.">            for (int y=0;y&lt;h; y++) {</span>
+<span class="nc" id="L327">                this.setBrightness(x,y,stat.thresholdBrightness(this.getBrightness(x,y),1.0f));</span>
+            }
+        }
+<span class="nc" id="L330">    }</span>
+    
+    /**ADAPTIVE THRESHOLDING CEZ GETNEIGHBORHOOD - deprecated*/
+    public void adaptiveThresholding() { // jedine pouzitie tejto funkcie by malo byt v konstruktore znacky 
+<span class="fc" id="L334">        Statistics stat = new Statistics(this);</span>
+<span class="fc" id="L335">        int radius = Intelligence.configurator.getIntProperty(&quot;photo_adaptivethresholdingradius&quot;);</span>
+<span class="pc bpc" id="L336" title="1 of 2 branches missed.">        if (radius == 0) {</span>
+<span class="nc" id="L337">            plainThresholding(stat);</span>
+<span class="nc" id="L338">            return;</span>
+        }
+        
+///
+<span class="fc" id="L342">        int w = this.getWidth();</span>
+<span class="fc" id="L343">        int h = this.getHeight();</span>
+
+<span class="fc" id="L345">        float[][] sourceArray = this.bufferedImageToArray(this.image,w,h);</span>
+<span class="fc" id="L346">        float[][] destinationArray = this.bufferedImageToArray(this.image,w,h);</span>
+
+        int count;
+        float neighborhood;
+        
+<span class="fc bfc" id="L351" title="All 2 branches covered.">        for (int x=0; x&lt;w; x++) {</span>
+<span class="fc bfc" id="L352" title="All 2 branches covered.">            for (int y=0; y&lt;h; y++) {</span>
+                // compute neighborhood
+<span class="fc" id="L354">                count = 0;</span>
+<span class="fc" id="L355">                neighborhood = 0;</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">                for (int ix = x-radius; ix &lt;=x+radius; ix++) {</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">                    for (int iy = y-radius; iy &lt;=y+radius; iy++) {</span>
+<span class="fc bfc" id="L358" title="All 8 branches covered.">                        if (ix &gt;= 0 &amp;&amp; iy &gt;=0 &amp;&amp; ix &lt; w &amp;&amp; iy &lt; h) {</span>
+<span class="fc" id="L359">                            neighborhood += sourceArray[ix][iy];</span>
+<span class="fc" id="L360">                            count++;</span>
+                        } 
+                        /********/
+//                        else {
+//                            neighborhood += stat.average;
+//                            count++;
+//                        }
+                        /********/
+                    }
+                }
+<span class="fc" id="L370">                neighborhood /= count;</span>
+                //
+<span class="fc bfc" id="L372" title="All 2 branches covered.">                if (destinationArray[x][y] &lt; neighborhood) {</span>
+<span class="fc" id="L373">                    destinationArray[x][y] = 0f;</span>
+                }  else {
+<span class="fc" id="L375">                    destinationArray[x][y] = 1f;</span>
+                }
+            }
+        }
+<span class="fc" id="L379">        this.image = arrayToBufferedImage(destinationArray,w,h);</span>
+<span class="fc" id="L380">    }</span>
+    
+    public HoughTransformation getHoughTransformation() {
+<span class="nc" id="L383">        HoughTransformation hough = new HoughTransformation(this.getWidth(), this.getHeight());</span>
+<span class="nc bnc" id="L384" title="All 2 branches missed.">        for (int x=0; x&lt;this.getWidth();x++) {</span>
+<span class="nc bnc" id="L385" title="All 2 branches missed.">            for (int y=0; y&lt;this.getHeight(); y++) {</span>
+<span class="nc" id="L386">                hough.addLine(x,y,this.getBrightness(x,y));</span>
+            }
+        }
+<span class="nc" id="L389">        return hough;</span>
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

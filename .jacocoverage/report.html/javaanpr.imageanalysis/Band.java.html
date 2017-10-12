@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Band.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">Band.java</span></div><h1>Band.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+//import java.io.IOException;
+import java.util.Vector;
+import javaanpr.intelligence.Intelligence;
+//import javaanpr.configurator.Configurator;
+
+public class Band extends Photo {
+<span class="fc" id="L13">    static public Graph.ProbabilityDistributor distributor = new Graph.ProbabilityDistributor(0,0,25,25);</span>
+<span class="fc" id="L14">    static private int numberOfCandidates = Intelligence.configurator.getIntProperty(&quot;intelligence_numberOfPlates&quot;);</span>
+            
+<span class="pc" id="L16">    private BandGraph graphHandle = null;</span>
+    
+    /** Creates a new instance of Band */
+<span class="nc" id="L19">    public Band() {</span>
+<span class="nc" id="L20">        image = null;</span>
+<span class="nc" id="L21">    }</span>
+    
+    public Band(BufferedImage bi) {
+<span class="fc" id="L24">        super(bi);</span>
+<span class="fc" id="L25">    }</span>
+    
+    public BufferedImage renderGraph() {
+<span class="nc" id="L28">        this.computeGraph();</span>
+<span class="nc" id="L29">        return graphHandle.renderHorizontally(this.getWidth(), 100);</span>
+    }
+    
+    private Vector&lt;Graph.Peak&gt; computeGraph() {
+<span class="pc bpc" id="L33" title="1 of 2 branches missed.">        if (graphHandle != null) return graphHandle.peaks; // graf uz bol vypocitany</span>
+<span class="fc" id="L34">        BufferedImage imageCopy = duplicateBufferedImage(this.image);</span>
+<span class="fc" id="L35">        fullEdgeDetector(imageCopy);</span>
+<span class="fc" id="L36">        graphHandle = histogram(imageCopy);</span>
+<span class="fc" id="L37">        graphHandle.rankFilter(image.getHeight());</span>
+<span class="fc" id="L38">        graphHandle.applyProbabilityDistributor(distributor);</span>
+<span class="fc" id="L39">        graphHandle.findPeaks(numberOfCandidates);</span>
+<span class="fc" id="L40">        return graphHandle.peaks;</span>
+    }
+    
+    public Vector&lt;Plate&gt; getPlates() {
+<span class="fc" id="L44">        Vector&lt;Plate&gt; out = new Vector&lt;Plate&gt;();</span>
+        
+<span class="fc" id="L46">        Vector&lt;Graph.Peak&gt; peaks = computeGraph();</span>
+        
+<span class="fc bfc" id="L48" title="All 2 branches covered.">        for (int i=0; i&lt;peaks.size(); i++) {</span>
+            // vyseknut z povodneho! obrazka znacky, a ulozit do vektora. POZOR !!!!!! Vysekavame z povodneho, takze
+            // na suradnice vypocitane z imageCopy musime uplatnit inverznu transformaciu
+<span class="fc" id="L51">            Graph.Peak p = peaks.elementAt(i);</span>
+<span class="fc" id="L52">            out.add(new Plate(</span>
+<span class="fc" id="L53">                    image.getSubimage(  p.getLeft()  ,</span>
+                    0  ,
+<span class="fc" id="L55">                    p.getDiff()  ,</span>
+<span class="fc" id="L56">                    image.getHeight()  )</span>
+                    ))
+                    ;
+        }
+<span class="fc" id="L60">        return out;</span>
+    }
+    
+//    public void horizontalRankBi(BufferedImage image) {
+//        BufferedImage imageCopy = duplicateBi(image);
+//        
+//        float data[] = new float[image.getHeight()];
+//        for (int i=0; i&lt;data.length; i++) data[i] = 1.0f/data.length;
+//        
+//        new ConvolveOp(new Kernel(data.length,1, data), ConvolveOp.EDGE_NO_OP, null).filter(imageCopy, image);
+//    }
+    
+    public BandGraph histogram(BufferedImage bi) {
+<span class="fc" id="L73">        BandGraph graph = new BandGraph(this);</span>
+<span class="fc bfc" id="L74" title="All 2 branches covered.">        for (int x=0; x&lt;bi.getWidth(); x++) {</span>
+<span class="fc" id="L75">            float counter = 0;</span>
+<span class="fc bfc" id="L76" title="All 2 branches covered.">            for (int y=0; y&lt;bi.getHeight();y++)</span>
+<span class="fc" id="L77">                counter += getBrightness(bi,x,y);</span>
+<span class="fc" id="L78">            graph.addPeak(counter);</span>
+        }
+<span class="fc" id="L80">        return graph;</span>
+    }
+    
+   public void fullEdgeDetector(BufferedImage source) {
+<span class="fc" id="L84">        float verticalMatrix[] = {</span>
+            -1,0,1,
+            -2,0,2,
+            -1,0,1,
+        };
+<span class="fc" id="L89">        float horizontalMatrix[] = {</span>
+            -1,-2,-1,
+            0, 0, 0,
+            1, 2, 1
+        };
+        
+<span class="fc" id="L95">        BufferedImage i1 = createBlankBi(source);</span>
+<span class="fc" id="L96">        BufferedImage i2 = createBlankBi(source);</span>
+        
+<span class="fc" id="L98">        new ConvolveOp(new Kernel(3, 3, verticalMatrix), ConvolveOp.EDGE_NO_OP, null).filter(source, i1);</span>
+<span class="fc" id="L99">        new ConvolveOp(new Kernel(3, 3, horizontalMatrix), ConvolveOp.EDGE_NO_OP, null).filter(source, i2);</span>
+        
+<span class="fc" id="L101">        int w = source.getWidth();</span>
+<span class="fc" id="L102">        int h = source.getHeight();</span>
+        
+<span class="fc bfc" id="L104" title="All 2 branches covered.">        for (int x=0; x &lt; w; x++)</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">            for (int y=0; y &lt; h; y++) {</span>
+<span class="fc" id="L106">            float sum = 0.0f;</span>
+<span class="fc" id="L107">            sum += Band.getBrightness(i1,x,y);</span>
+<span class="fc" id="L108">            sum += Band.getBrightness(i2,x,y);</span>
+<span class="fc" id="L109">            Band.setBrightness(source, x, y, Math.min(1.0f, sum));</span>
+            }
+        
+<span class="fc" id="L112">    }    </span>
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

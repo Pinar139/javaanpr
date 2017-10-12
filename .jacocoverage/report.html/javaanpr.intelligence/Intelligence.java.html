@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Intelligence.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.intelligence</a> &gt; <span class="el_source">Intelligence.java</span></div><h1>Intelligence.java</h1><pre class="source lang-java linenums">
+package javaanpr.intelligence;
+
+import java.awt.geom.AffineTransform;
+import java.awt.image.BufferedImage;
+import javaanpr.imageanalysis.HoughTransformation;
+import javaanpr.imageanalysis.Photo;
+import java.io.File;
+import java.util.Vector;
+import javaanpr.Main;
+import javaanpr.configurator.Configurator;
+import javaanpr.gui.TimeMeter;
+import javaanpr.imageanalysis.Band;
+import javaanpr.imageanalysis.CarSnapshot;
+import javaanpr.imageanalysis.Char;
+import javaanpr.imageanalysis.Plate;
+import javaanpr.recognizer.CharacterRecognizer;
+import javaanpr.recognizer.CharacterRecognizer.RecognizedChar;
+import javaanpr.recognizer.NeuralPatternClassificator;
+import javaanpr.recognizer.KnnPatternClassificator;
+
+public class Intelligence {
+<span class="fc" id="L23">    private long lastProcessDuration = 0; </span>
+    
+<span class="fc" id="L25">    public static Configurator configurator = new Configurator(&quot;.&quot;+File.separator+&quot;config.xml&quot;);</span>
+    public static CharacterRecognizer chrRecog;
+    public static Parser parser;
+    public boolean enableReportGeneration;
+    
+<span class="fc" id="L30">    public Intelligence(boolean enableReportGeneration) throws Exception {</span>
+<span class="fc" id="L31">        this.enableReportGeneration = enableReportGeneration;</span>
+<span class="fc" id="L32">        int classification_method = Intelligence.configurator.getIntProperty(&quot;intelligence_classification_method&quot;);</span>
+        
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">        if (classification_method == 0)</span>
+<span class="fc" id="L35">            Intelligence.chrRecog = new KnnPatternClassificator();</span>
+        else
+<span class="nc" id="L37">            Intelligence.chrRecog = new NeuralPatternClassificator();</span>
+        
+<span class="fc" id="L39">        Intelligence.parser = new Parser();</span>
+<span class="fc" id="L40">    }</span>
+    
+    
+    public long lastProcessDuration() {
+<span class="nc" id="L44">        return this.lastProcessDuration;</span>
+    }
+    
+    public String recognize(CarSnapshot carSnapshot) throws Exception {
+<span class="fc" id="L48">        TimeMeter time = new TimeMeter();</span>
+<span class="fc" id="L49">        int syntaxAnalysisMode = Intelligence.configurator.getIntProperty(&quot;intelligence_syntaxanalysis&quot;);</span>
+<span class="fc" id="L50">        int skewDetectionMode = Intelligence.configurator.getIntProperty(&quot;intelligence_skewdetection&quot;);</span>
+        
+<span class="pc bpc" id="L52" title="1 of 2 branches missed.">        if (enableReportGeneration) {</span>
+<span class="nc" id="L53">            Main.rg.insertText(&quot;&lt;h1&gt;Automatic Number Plate Recognition Report&lt;/h1&gt;&quot;);</span>
+<span class="nc" id="L54">            Main.rg.insertText(&quot;&lt;span&gt;Image width: &quot;+carSnapshot.getWidth()+&quot; px&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L55">            Main.rg.insertText(&quot;&lt;span&gt;Image height: &quot;+carSnapshot.getHeight()+&quot; px&lt;/span&gt;&quot;);</span>
+            
+<span class="nc" id="L57">            Main.rg.insertText(&quot;&lt;h2&gt;Vertical and Horizontal plate projection&lt;/h2&gt;&quot;);</span>
+            
+<span class="nc" id="L59">            Main.rg.insertImage(carSnapshot.renderGraph(), &quot;snapshotgraph&quot;,0,0);</span>
+<span class="nc" id="L60">            Main.rg.insertImage(carSnapshot.getBiWithAxes(), &quot;snapshot&quot;,0,0);</span>
+        }
+        
+<span class="pc bpc" id="L63" title="1 of 2 branches missed.">        for (Band b : carSnapshot.getBands()) { </span>
+
+<span class="pc bpc" id="L65" title="1 of 2 branches missed.">            if (enableReportGeneration) {</span>
+<span class="nc" id="L66">                Main.rg.insertText(&quot;&lt;div class='bandtxt'&gt;&lt;h4&gt;Band&lt;br&gt;&lt;/h4&gt;&quot;);</span>
+<span class="nc" id="L67">                Main.rg.insertImage(b.getBi(),&quot;bandsmall&quot;, 250,30);</span>
+<span class="nc" id="L68">                Main.rg.insertText(&quot;&lt;span&gt;Band width : &quot;+b.getWidth()+&quot; px&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L69">                Main.rg.insertText(&quot;&lt;span&gt;Band height : &quot;+b.getHeight()+&quot; px&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L70">                Main.rg.insertText(&quot;&lt;/div&gt;&quot;);</span>
+            }
+            
+<span class="fc bfc" id="L73" title="All 2 branches covered.">            for (Plate plate : b.getPlates()) {</span>
+
+<span class="pc bpc" id="L75" title="1 of 2 branches missed.">                if (enableReportGeneration) {</span>
+<span class="nc" id="L76">                    Main.rg.insertText(&quot;&lt;div class='platetxt'&gt;&lt;h4&gt;Plate&lt;br&gt;&lt;/h4&gt;&quot;);</span>
+<span class="nc" id="L77">                    Main.rg.insertImage(plate.getBi(),&quot;platesmall&quot;, 120, 30);</span>
+<span class="nc" id="L78">                    Main.rg.insertText(&quot;&lt;span&gt;Plate width : &quot;+plate.getWidth()+&quot; px&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L79">                    Main.rg.insertText(&quot;&lt;span&gt;Plate height : &quot;+plate.getHeight()+&quot; px&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L80">                    Main.rg.insertText(&quot;&lt;/div&gt;&quot;);</span>
+                }                
+
+                
+               
+<span class="fc" id="L85">                Plate notNormalizedCopy = null;</span>
+<span class="fc" id="L86">                BufferedImage renderedHoughTransform = null;</span>
+<span class="fc" id="L87">                HoughTransformation hough = null;</span>
+<span class="pc bpc" id="L88" title="2 of 4 branches missed.">                if (enableReportGeneration || skewDetectionMode!=0) { </span>
+<span class="nc" id="L89">                    notNormalizedCopy = plate.clone();</span>
+<span class="nc" id="L90">                    notNormalizedCopy.horizontalEdgeDetector(notNormalizedCopy.getBi());</span>
+<span class="nc" id="L91">                    hough = notNormalizedCopy.getHoughTransformation(); </span>
+<span class="nc" id="L92">                    renderedHoughTransform = hough.render(HoughTransformation.RENDER_ALL, HoughTransformation.COLOR_BW);</span>
+                }
+<span class="pc bpc" id="L94" title="1 of 2 branches missed.">                if (skewDetectionMode!=0) { </span>
+<span class="nc" id="L95">                    AffineTransform shearTransform = AffineTransform.getShearInstance(0,-(double)hough.dy/hough.dx);</span>
+<span class="nc" id="L96">                    BufferedImage core = plate.createBlankBi(plate.getBi());</span>
+<span class="nc" id="L97">                    core.createGraphics().drawRenderedImage(plate.getBi(), shearTransform);</span>
+<span class="nc" id="L98">                    plate = new Plate(core);</span>
+                }
+                
+<span class="fc" id="L101">                plate.normalize();</span>
+                
+<span class="fc" id="L103">                float plateWHratio = (float)plate.getWidth() / (float)plate.getHeight();</span>
+<span class="pc bpc" id="L104" title="1 of 2 branches missed.">                if (plateWHratio &lt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_minPlateWidthHeightRatio&quot;)</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                ||  plateWHratio &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxPlateWidthHeightRatio&quot;)</span>
+<span class="nc" id="L106">                ) continue;</span>
+                
+<span class="fc" id="L108">                Vector&lt;Char&gt; chars = plate.getChars();</span>
+                
+                
+                
+<span class="fc bfc" id="L112" title="All 2 branches covered.">                if (chars.size() &lt; Intelligence.configurator.getIntProperty(&quot;intelligence_minimumChars&quot;) ||</span>
+<span class="pc bpc" id="L113" title="1 of 2 branches missed.">                        chars.size() &gt; Intelligence.configurator.getIntProperty(&quot;intelligence_maximumChars&quot;)</span>
+<span class="nc" id="L114">                        ) continue;</span>
+                
+<span class="fc bfc" id="L116" title="All 2 branches covered.">                if (plate.getCharsWidthDispersion(chars) &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxCharWidthDispersion&quot;)</span>
+<span class="fc" id="L117">                ) continue;</span>
+                
+                
+
+<span class="pc bpc" id="L121" title="1 of 2 branches missed.">                if (enableReportGeneration) {</span>
+<span class="nc" id="L122">                    Main.rg.insertText(&quot;&lt;h2&gt;Detected band&lt;/h2&gt;&quot;);</span>
+<span class="nc" id="L123">                    Main.rg.insertImage(b.getBiWithAxes(),&quot;band&quot;,0,0);</span>
+<span class="nc" id="L124">                    Main.rg.insertImage(b.renderGraph(),&quot;bandgraph&quot;,0,0);</span>
+<span class="nc" id="L125">                    Main.rg.insertText(&quot;&lt;h2&gt;Detected plate&lt;/h2&gt;&quot;);</span>
+<span class="nc" id="L126">                    Plate plateCopy = plate.clone();</span>
+<span class="nc" id="L127">                    plateCopy.linearResize(450, 90);</span>
+<span class="nc" id="L128">                    Main.rg.insertImage(plateCopy.getBiWithAxes(), &quot;plate&quot;,0,0);</span>
+<span class="nc" id="L129">                    Main.rg.insertImage(plateCopy.renderGraph(), &quot;plategraph&quot;,0,0);</span>
+                }
+                
+                // SKEW-RELATED
+<span class="pc bpc" id="L133" title="1 of 2 branches missed.">                if (enableReportGeneration) {</span>
+<span class="nc" id="L134">                    Main.rg.insertText(&quot;&lt;h2&gt;Skew detection&lt;/h2&gt;&quot;);</span>
+                    //Main.rg.insertImage(notNormalizedCopy.getBi());                    
+<span class="nc" id="L136">                    Main.rg.insertImage(notNormalizedCopy.getBi(), &quot;skewimage&quot;,0,0);</span>
+<span class="nc" id="L137">                    Main.rg.insertImage(renderedHoughTransform, &quot;skewtransform&quot;,0,0);</span>
+<span class="nc" id="L138">                    Main.rg.insertText(&quot;Detected skew angle : &lt;b&gt;&quot;+hough.angle+&quot;&lt;/b&gt;&quot; );</span>
+                }
+                                    
+                
+<span class="fc" id="L142">                RecognizedPlate recognizedPlate = new RecognizedPlate();</span>
+                
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">                if (enableReportGeneration) {</span>
+<span class="nc" id="L145">                    Main.rg.insertText(&quot;&lt;h2&gt;Character segmentation&lt;/h2&gt;&quot;);</span>
+<span class="nc" id="L146">                    Main.rg.insertText(&quot;&lt;div class='charsegment'&gt;&quot;);</span>
+<span class="nc bnc" id="L147" title="All 2 branches missed.">                    for (Char chr : chars) {</span>
+<span class="nc" id="L148">                        Main.rg.insertImage(Photo.linearResizeBi(chr.getBi(),70,100), &quot;&quot;,0,0);</span>
+<span class="nc" id="L149">                    }</span>
+<span class="nc" id="L150">                    Main.rg.insertText(&quot;&lt;/div&gt;&quot;);</span>
+                }
+                
+<span class="fc bfc" id="L153" title="All 2 branches covered.">                for (Char chr : chars) chr.normalize();</span>
+                
+<span class="fc" id="L155">                float averageHeight = plate.getAveragePieceHeight(chars);</span>
+<span class="fc" id="L156">                float averageContrast = plate.getAveragePieceContrast(chars);</span>
+<span class="fc" id="L157">                float averageBrightness = plate.getAveragePieceBrightness(chars);</span>
+<span class="fc" id="L158">                float averageHue = plate.getAveragePieceHue(chars);</span>
+<span class="fc" id="L159">                float averageSaturation = plate.getAveragePieceSaturation(chars);</span>
+                
+<span class="fc bfc" id="L161" title="All 2 branches covered.">                for (Char chr : chars) {</span>
+                   
+<span class="fc" id="L163">                    boolean ok = true;</span>
+<span class="fc" id="L164">                    String errorFlags = &quot;&quot;;</span>
+                    
+                    
+<span class="fc" id="L167">                    float widthHeightRatio = (float)(chr.pieceWidth);</span>
+<span class="fc" id="L168">                    widthHeightRatio /= (float)(chr.pieceHeight);</span>
+                    
+<span class="fc bfc" id="L170" title="All 2 branches covered.">                    if (widthHeightRatio &lt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_minCharWidthHeightRatio&quot;) ||</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">                            widthHeightRatio &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxCharWidthHeightRatio&quot;)</span>
+                            ) {
+<span class="fc" id="L173">                        errorFlags += &quot;WHR &quot;;</span>
+<span class="fc" id="L174">                        ok = false;</span>
+<span class="pc bpc" id="L175" title="1 of 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+                    
+                    
+<span class="fc bfc" id="L179" title="All 2 branches covered.">                    if ((chr.positionInPlate.x1 &lt; 2 ||</span>
+<span class="pc bpc" id="L180" title="1 of 4 branches missed.">                            chr.positionInPlate.x2 &gt; plate.getWidth()-1)</span>
+                            &amp;&amp; widthHeightRatio &lt; 0.12
+                            ) {
+<span class="fc" id="L183">                        errorFlags += &quot;POS &quot;;</span>
+<span class="fc" id="L184">                        ok = false;</span>
+<span class="pc bpc" id="L185" title="1 of 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+                    
+                    
+                    
+                    
+<span class="fc" id="L191">                    float contrastCost = Math.abs(chr.statisticContrast - averageContrast);</span>
+<span class="fc" id="L192">                    float brightnessCost = Math.abs(chr.statisticAverageBrightness - averageBrightness);</span>
+<span class="fc" id="L193">                    float hueCost = Math.abs(chr.statisticAverageHue - averageHue);</span>
+<span class="fc" id="L194">                    float saturationCost = Math.abs(chr.statisticAverageSaturation - averageSaturation);</span>
+<span class="fc" id="L195">                    float heightCost = (chr.pieceHeight - averageHeight) / averageHeight;</span>
+                    
+<span class="fc bfc" id="L197" title="All 2 branches covered.">                    if (brightnessCost &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxBrightnessCostDispersion&quot;)) {</span>
+<span class="fc" id="L198">                        errorFlags += &quot;BRI &quot;;</span>
+<span class="fc" id="L199">                        ok = false;</span>
+<span class="pc bpc" id="L200" title="1 of 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+<span class="fc bfc" id="L202" title="All 2 branches covered.">                    if (contrastCost &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxContrastCostDispersion&quot;)) {</span>
+<span class="fc" id="L203">                        errorFlags += &quot;CON &quot;;</span>
+<span class="fc" id="L204">                        ok = false;</span>
+<span class="pc bpc" id="L205" title="1 of 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+<span class="fc bfc" id="L207" title="All 2 branches covered.">                    if (hueCost &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxHueCostDispersion&quot;)) {</span>
+<span class="fc" id="L208">                        errorFlags += &quot;HUE &quot;;</span>
+<span class="fc" id="L209">                        ok = false;</span>
+<span class="pc bpc" id="L210" title="1 of 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+<span class="fc bfc" id="L212" title="All 2 branches covered.">                    if (saturationCost &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxSaturationCostDispersion&quot;)) {</span>
+<span class="fc" id="L213">                        errorFlags += &quot;SAT &quot;;</span>
+<span class="fc" id="L214">                        ok = false;</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+<span class="pc bpc" id="L217" title="1 of 2 branches missed.">                    if (heightCost &lt; -Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxHeightCostDispersion&quot;)) {</span>
+<span class="nc" id="L218">                        errorFlags += &quot;HEI &quot;;</span>
+<span class="nc" id="L219">                        ok = false;</span>
+<span class="nc bnc" id="L220" title="All 2 branches missed.">                        if (!enableReportGeneration) continue;</span>
+                    }
+                    
+<span class="fc" id="L223">                    float similarityCost = 0;</span>
+<span class="fc" id="L224">                    RecognizedChar rc = null;</span>
+<span class="pc bpc" id="L225" title="1 of 2 branches missed.">                    if (ok==true) {</span>
+<span class="fc" id="L226">                        rc = Intelligence.chrRecog.recognize(chr);</span>
+<span class="fc" id="L227">                        similarityCost = rc.getPatterns().elementAt(0).getCost();</span>
+<span class="pc bpc" id="L228" title="1 of 2 branches missed.">                        if (similarityCost &gt; Intelligence.configurator.getDoubleProperty(&quot;intelligence_maxSimilarityCostDispersion&quot;)) {</span>
+<span class="nc" id="L229">                            errorFlags += &quot;NEU &quot;;</span>
+<span class="nc" id="L230">                            ok = false;</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">                            if (!enableReportGeneration) continue;</span>
+                        }
+                        
+                    }
+                    
+<span class="pc bpc" id="L236" title="1 of 2 branches missed.">                    if (ok==true) {</span>
+<span class="fc" id="L237">                        recognizedPlate.addChar(rc);</span>
+                    } else {
+                    }
+                    
+<span class="pc bpc" id="L241" title="1 of 2 branches missed.">                    if (enableReportGeneration) {</span>
+<span class="nc" id="L242">                        Main.rg.insertText(&quot;&lt;div class='heuristictable'&gt;&quot;);</span>
+<span class="nc" id="L243">                        Main.rg.insertImage(Photo.linearResizeBi(chr.getBi(),chr.getWidth()*2, chr.getHeight()*2), &quot;skeleton&quot;,0,0);</span>
+<span class="nc" id="L244">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;WHR&lt;/span&gt;&lt;span class='value'&gt;&quot;+widthHeightRatio+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L245">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;HEI&lt;/span&gt;&lt;span class='value'&gt;&quot;+heightCost+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L246">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;NEU&lt;/span&gt;&lt;span class='value'&gt;&quot;+similarityCost+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L247">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;CON&lt;/span&gt;&lt;span class='value'&gt;&quot;+contrastCost+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L248">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;BRI&lt;/span&gt;&lt;span class='value'&gt;&quot;+brightnessCost+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L249">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;HUE&lt;/span&gt;&lt;span class='value'&gt;&quot;+hueCost+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L250">                        Main.rg.insertText(&quot;&lt;span class='name'&gt;SAT&lt;/span&gt;&lt;span class='value'&gt;&quot;+saturationCost+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L251">                        Main.rg.insertText(&quot;&lt;/table&gt;&quot;);</span>
+<span class="nc bnc" id="L252" title="All 2 branches missed.">                        if (errorFlags.length()!=0) Main.rg.insertText(&quot;&lt;span class='errflags'&gt;&quot;+errorFlags+&quot;&lt;/span&gt;&quot;);</span>
+<span class="nc" id="L253">                        Main.rg.insertText(&quot;&lt;/div&gt;&quot;);</span>
+                    }
+<span class="fc" id="L255">                } </span>
+                
+                
+               
+<span class="pc bpc" id="L259" title="1 of 2 branches missed.">                if (recognizedPlate.chars.size() &lt; Intelligence.configurator.getIntProperty(&quot;intelligence_minimumChars&quot;)) continue;</span>
+                
+<span class="fc" id="L261">                this.lastProcessDuration = time.getTime();</span>
+<span class="fc" id="L262">                String parsedOutput = parser.parse(recognizedPlate, syntaxAnalysisMode);</span>
+                
+<span class="pc bpc" id="L264" title="1 of 2 branches missed.">                if (enableReportGeneration) {</span>
+<span class="nc" id="L265">                    Main.rg.insertText(&quot;&lt;span class='recognized'&gt;&quot;);</span>
+<span class="nc" id="L266">                    Main.rg.insertText(&quot;Recognized plate : &quot;+parsedOutput);</span>
+<span class="nc" id="L267">                    Main.rg.insertText(&quot;&lt;/span&gt;&quot;);</span>
+                }
+                
+<span class="fc" id="L270">                return parsedOutput;</span>
+            
+            } 
+
+<span class="fc" id="L274">        }</span>
+        
+<span class="nc" id="L276">        this.lastProcessDuration = time.getTime(); </span>
+<span class="nc" id="L277">        return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

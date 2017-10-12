@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>CarSnapshot.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">CarSnapshot.java</span></div><h1>CarSnapshot.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
+import java.io.IOException;
+import java.util.Vector;
+import javaanpr.intelligence.Intelligence;
+
+public class CarSnapshot extends Photo {
+<span class="fc" id="L12">    private static int distributor_margins = </span>
+<span class="fc" id="L13">            Intelligence.configurator.getIntProperty(&quot;carsnapshot_distributormargins&quot;);</span>
+//    private static int carsnapshot_projectionresize_x =
+//            Main.configurator.getIntProperty(&quot;carsnapshot_projectionresize_x&quot;);
+//    private static int carsnapshot_projectionresize_y =
+//            Main.configurator.getIntProperty(&quot;carsnapshot_projectionresize_y&quot;);
+<span class="fc" id="L18">    private static int carsnapshot_graphrankfilter =</span>
+<span class="fc" id="L19">            Intelligence.configurator.getIntProperty(&quot;carsnapshot_graphrankfilter&quot;);</span>
+
+<span class="fc" id="L21">    static private int numberOfCandidates = Intelligence.configurator.getIntProperty(&quot;intelligence_numberOfBands&quot;);</span>
+<span class="pc" id="L22">    private CarSnapshotGraph graphHandle = null;</span>
+
+    
+<span class="fc" id="L25">    public static Graph.ProbabilityDistributor distributor = new Graph.ProbabilityDistributor(0,0,distributor_margins,distributor_margins);</span>
+    
+<span class="nc" id="L27">    public CarSnapshot() {</span>
+<span class="nc" id="L28">    }</span>
+    
+    public CarSnapshot(String filepath) throws IOException {
+<span class="fc" id="L31">        super(filepath);</span>
+<span class="fc" id="L32">    }</span>
+    
+    public CarSnapshot(BufferedImage bi) {
+<span class="nc" id="L35">        super(bi);</span>
+<span class="nc" id="L36">    }</span>
+
+    public BufferedImage renderGraph() {
+<span class="nc" id="L39">        this.computeGraph();</span>
+<span class="nc" id="L40">        return graphHandle.renderVertically(100, this.getHeight());</span>
+    }    
+    
+    private Vector&lt;Graph.Peak&gt; computeGraph() {
+<span class="pc bpc" id="L44" title="1 of 2 branches missed.">        if (graphHandle != null) return graphHandle.peaks; // graf uz bol vypocitany</span>
+
+<span class="fc" id="L46">        BufferedImage imageCopy = CarSnapshot.duplicateBufferedImage(this.image);</span>
+<span class="fc" id="L47">        verticalEdgeBi(imageCopy); </span>
+<span class="fc" id="L48">        thresholding(imageCopy); // strasne moc zere</span>
+
+<span class="fc" id="L50">        graphHandle = this.histogram(imageCopy);</span>
+<span class="fc" id="L51">        graphHandle.rankFilter(carsnapshot_graphrankfilter);</span>
+<span class="fc" id="L52">        graphHandle.applyProbabilityDistributor(distributor);</span>
+        
+<span class="fc" id="L54">        graphHandle.findPeaks(numberOfCandidates); //sort by height</span>
+<span class="fc" id="L55">        return graphHandle.peaks;</span>
+    }
+        
+    public Vector&lt;Band&gt; getBands() {
+<span class="fc" id="L59">        Vector&lt;Band&gt; out = new Vector&lt;Band&gt;();</span>
+
+<span class="fc" id="L61">        Vector&lt;Graph.Peak&gt; peaks = computeGraph();</span>
+        
+<span class="fc bfc" id="L63" title="All 2 branches covered.">        for (int i=0; i&lt;peaks.size(); i++) {</span>
+            // vyseknut z povodneho! obrazka znacky, a ulozit do vektora. POZOR !!!!!! Vysekavame z povodneho, takze
+            // na suradnice vypocitane z imageCopy musime uplatnit inverznu transformaciu
+<span class="fc" id="L66">            Graph.Peak p = peaks.elementAt(i);</span>
+<span class="fc" id="L67">            out.add(new Band(</span>
+<span class="fc" id="L68">                    image.getSubimage(  0  ,</span>
+<span class="fc" id="L69">                    (int) (p.getLeft())  ,</span>
+<span class="fc" id="L70">                    image.getWidth()  ,</span>
+<span class="fc" id="L71">                    (int) (p.getDiff()  )</span>
+                    ))
+                    );
+        }
+<span class="fc" id="L75">        return out;</span>
+        
+    }
+    
+    public void verticalEdgeBi(BufferedImage image) {
+<span class="fc" id="L80">        BufferedImage imageCopy = duplicateBufferedImage(image);</span>
+        
+<span class="fc" id="L82">        float data[] = {</span>
+            -1,0,1,
+            -1,0,1,
+            -1,0,1,
+            -1,0,1
+        };
+        
+<span class="fc" id="L89">        new ConvolveOp(new Kernel(3, 4, data), ConvolveOp.EDGE_NO_OP, null).filter(imageCopy, image);</span>
+<span class="fc" id="L90">    }</span>
+//    public void verticalRankBi(BufferedImage image) {
+//        BufferedImage imageCopy = duplicateBi(image);
+//        
+//        float data[] = new float[9];
+//        for (int i=0; i&lt;data.length; i++) data[i] = 1.0f/data.length;
+//        
+//        new ConvolveOp(new Kernel(1,data.length, data), ConvolveOp.EDGE_NO_OP, null).filter(imageCopy, image);
+//    }
+    
+    public CarSnapshotGraph histogram(BufferedImage bi) {
+<span class="fc" id="L101">        CarSnapshotGraph graph = new CarSnapshotGraph(this);</span>
+<span class="fc bfc" id="L102" title="All 2 branches covered.">        for (int y=0; y&lt;bi.getHeight(); y++) {</span>
+<span class="fc" id="L103">            float counter = 0;</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for (int x=0; x&lt;bi.getWidth();x++)</span>
+<span class="fc" id="L105">                counter += getBrightness(bi,x,y);</span>
+<span class="fc" id="L106">            graph.addPeak(counter);</span>
+        }
+<span class="fc" id="L108">        return graph;        </span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PlateHorizontalGraph.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">PlateHorizontalGraph.java</span></div><h1>PlateHorizontalGraph.java</h1><pre class="source lang-java linenums">
+
+package javaanpr.imageanalysis;
+
+
+import java.util.Vector;
+import javaanpr.intelligence.Intelligence;
+
+
+public class PlateHorizontalGraph extends Graph {
+<span class="fc" id="L11">    private static final double peakFootConstant =</span>
+<span class="fc" id="L12">            Intelligence.configurator.getDoubleProperty(&quot;platehorizontalgraph_peakfootconstant&quot;);</span>
+<span class="fc" id="L13">    private static final int horizontalDetectionType = </span>
+<span class="fc" id="L14">            Intelligence.configurator.getIntProperty(&quot;platehorizontalgraph_detectionType&quot;);</span>
+    
+    Plate handle;
+    
+<span class="fc" id="L18">    public PlateHorizontalGraph(Plate handle) {</span>
+<span class="fc" id="L19">        this.handle = handle;</span>
+<span class="fc" id="L20">    }</span>
+    
+    public float derivation(int index1, int index2) {
+<span class="nc" id="L23">        return this.yValues.elementAt(index1) - this.yValues.elementAt(index2);</span>
+    }
+    
+    public Vector&lt;Peak&gt; findPeak(int count) {
+<span class="pc bpc" id="L27" title="1 of 2 branches missed.">        if (horizontalDetectionType==1) return findPeak_edgedetection(count);</span>
+<span class="nc" id="L28">        return findPeak_derivate(count); </span>
+    }
+    
+    @SuppressWarnings(&quot;empty-statement&quot;)
+    public Vector&lt;Peak&gt; findPeak_derivate(int count) {  
+        int a,b;
+<span class="nc" id="L34">        float maxVal = this.getMaxValue();</span>
+        
+<span class="nc bnc" id="L36" title="All 4 branches missed.">        for (a=2; -derivation(a,a+4) &lt; maxVal*0.2 &amp;&amp; a &lt; this.yValues.size()-2-2-4; a++);</span>
+<span class="nc bnc" id="L37" title="All 4 branches missed.">        for (b=this.yValues.size()-1-2; derivation(b-4,b) &lt; maxVal*0.2 &amp;&amp; b&gt;a+2; b--);</span>
+
+<span class="nc" id="L39">        Vector&lt;Peak&gt; outPeaks = new Vector&lt;Peak&gt;();</span>
+       
+<span class="nc" id="L41">        outPeaks.add(new Peak(a,b));</span>
+<span class="nc" id="L42">        super.peaks = outPeaks;</span>
+<span class="nc" id="L43">        return outPeaks;</span>
+    }
+    
+    @SuppressWarnings(&quot;empty-statement&quot;)
+    public Vector&lt;Peak&gt; findPeak_edgedetection (int count) {
+<span class="fc" id="L48">        float average = this.getAverageValue();</span>
+        int a,b;
+<span class="fc bfc" id="L50" title="All 2 branches covered.">        for (a=0; this.yValues.elementAt(a) &lt; average; a++);</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">        for (b=this.yValues.size()-1; this.yValues.elementAt(b) &lt; average; b--);</span>
+        
+<span class="fc" id="L53">        Vector&lt;Peak&gt; outPeaks = new Vector&lt;Peak&gt;();</span>
+<span class="fc" id="L54">        a = Math.max(a-5,0);</span>
+<span class="fc" id="L55">        b = Math.min(b+5,this.yValues.size());</span>
+        
+<span class="fc" id="L57">        outPeaks.add(new Peak(a,b));</span>
+<span class="fc" id="L58">        super.peaks = outPeaks;</span>
+<span class="fc" id="L59">        return outPeaks;</span>
+    }
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Parser.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.intelligence</a> &gt; <span class="el_source">Parser.java</span></div><h1>Parser.java</h1><pre class="source lang-java linenums">
+package javaanpr.intelligence;
+
+import java.io.IOException;
+import java.util.Vector;
+//import javax.xml.parsers.ParserConfigurationException;
+import org.w3c.dom.*;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+//import org.xml.sax.SAXException;
+import javaanpr.Main;
+import javaanpr.recognizer.CharacterRecognizer.*;
+
+public class Parser {
+    public class PlateForm {
+        public class Position {
+            public char[] allowedChars;
+<span class="fc" id="L18">            public Position(String data) {</span>
+<span class="fc" id="L19">                this.allowedChars = data.toCharArray();</span>
+<span class="fc" id="L20">            }</span>
+            public boolean isAllowed(char chr) {
+<span class="fc" id="L22">                boolean ret = false;</span>
+<span class="fc bfc" id="L23" title="All 2 branches covered.">                for (int i=0; i&lt;this.allowedChars.length; i++)</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">                    if (this.allowedChars[i] == chr)</span>
+<span class="fc" id="L25">                        ret = true;</span>
+<span class="fc" id="L26">                return ret;</span>
+            }
+        }
+        Vector&lt;Position&gt; positions;
+        String name;
+<span class="fc" id="L31">        public boolean flagged = false;</span>
+        
+<span class="fc" id="L33">        public PlateForm(String name) {</span>
+<span class="fc" id="L34">            this.name = name;</span>
+<span class="fc" id="L35">            this.positions = new Vector&lt;Position&gt;();</span>
+<span class="fc" id="L36">        }</span>
+        public void addPosition(Position p) {
+<span class="fc" id="L38">            this.positions.add(p);</span>
+<span class="fc" id="L39">        }</span>
+        public Position getPosition(int index) {
+<span class="fc" id="L41">            return this.positions.elementAt(index);</span>
+        }
+        public int length() {
+<span class="fc" id="L44">            return this.positions.size();</span>
+        }
+        
+    }
+    public class FinalPlate {
+        public String plate;
+<span class="fc" id="L50">        public float requiredChanges = 0;</span>
+<span class="fc" id="L51">        FinalPlate() {</span>
+<span class="fc" id="L52">            this.plate = new String();</span>
+<span class="fc" id="L53">        }</span>
+        public void addChar(char chr) {
+<span class="fc" id="L55">            this.plate = this.plate + chr;</span>
+<span class="fc" id="L56">        }</span>
+    }
+    
+    Vector&lt;PlateForm&gt; plateForms;
+    
+    /** Creates a new instance of Parser
+     * @throws java.lang.Exception */
+<span class="fc" id="L63">    public Parser() throws Exception {</span>
+<span class="fc" id="L64">        this.plateForms = new Vector&lt;PlateForm&gt;();</span>
+<span class="fc" id="L65">        this.plateForms = this.loadFromXml(Intelligence.configurator.getPathProperty(&quot;intelligence_syntaxDescriptionFile&quot;));</span>
+<span class="fc" id="L66">    }</span>
+    
+    public Vector&lt;PlateForm&gt; loadFromXml(String fileName) throws Exception {
+<span class="fc" id="L69">        Vector&lt;PlateForm&gt; plateForms = new Vector&lt;PlateForm&gt;();</span>
+        
+<span class="fc" id="L71">        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();</span>
+<span class="fc" id="L72">        DocumentBuilder parser = factory.newDocumentBuilder();</span>
+<span class="fc" id="L73">        Document doc = parser.parse(fileName);</span>
+        
+<span class="fc" id="L75">        Node structureNode = doc.getDocumentElement();</span>
+<span class="fc" id="L76">        NodeList structureNodeContent = structureNode.getChildNodes();</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">        for (int i=0; i&lt;structureNodeContent.getLength(); i++) {</span>
+<span class="fc" id="L78">            Node typeNode = structureNodeContent.item(i);</span>
+<span class="fc bfc" id="L79" title="All 2 branches covered.">            if (!typeNode.getNodeName().equals(&quot;type&quot;)) continue;</span>
+<span class="fc" id="L80">            PlateForm form = new PlateForm(((Element)typeNode).getAttribute(&quot;name&quot;));</span>
+<span class="fc" id="L81">            NodeList typeNodeContent = typeNode.getChildNodes();</span>
+<span class="fc bfc" id="L82" title="All 2 branches covered.">            for (int ii=0; ii&lt;typeNodeContent.getLength(); ii++) {</span>
+<span class="fc" id="L83">                Node charNode = typeNodeContent.item(ii);</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                if (!charNode.getNodeName().equals(&quot;char&quot;)) continue;</span>
+<span class="fc" id="L85">                String content = ((Element)charNode).getAttribute(&quot;content&quot;);</span>
+                
+<span class="fc" id="L87">                form.addPosition(form.new Position(  content.toUpperCase()  ));</span>
+            }
+<span class="fc" id="L89">            plateForms.add(form);</span>
+        }
+<span class="fc" id="L91">        return plateForms;</span>
+    }
+    ////
+    public void unFlagAll() {
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        for (PlateForm form : this.plateForms)</span>
+<span class="fc" id="L96">            form.flagged = false;</span>
+<span class="fc" id="L97">    }</span>
+    // pre danu dlzku znacky sa pokusi najst nejaky plateform o rovnakej dlzke
+    // v pripade ze nenajde ziadny, pripusti moznost ze je nejaky znak navyse
+    // a hlada plateform s mensim poctom pismen
+    public void flagEqualOrShorterLength(int length) {
+<span class="fc" id="L102">        boolean found = false;</span>
+<span class="fc bfc" id="L103" title="All 4 branches covered.">        for (int i=length; i&gt;=1 &amp;&amp; !found; i--) {</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">            for (PlateForm form : this.plateForms) {</span>
+<span class="fc bfc" id="L105" title="All 2 branches covered.">                if (form.length() == i) {</span>
+<span class="fc" id="L106">                    form.flagged = true;</span>
+<span class="fc" id="L107">                    found = true;</span>
+                }
+<span class="fc" id="L109">            }</span>
+        }
+<span class="fc" id="L111">    }</span>
+    
+    public void flagEqualLength(int length) {
+<span class="nc bnc" id="L114" title="All 2 branches missed.">        for (PlateForm form : this.plateForms) {</span>
+<span class="nc bnc" id="L115" title="All 2 branches missed.">            if (form.length() == length) {</span>
+<span class="nc" id="L116">                form.flagged = true;</span>
+            }
+<span class="nc" id="L118">        }</span>
+<span class="nc" id="L119">    }</span>
+
+    public void invertFlags() {
+<span class="nc bnc" id="L122" title="All 2 branches missed.">        for (PlateForm form : this.plateForms)</span>
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            form.flagged = !form.flagged;</span>
+<span class="nc" id="L124">    }    </span>
+    
+    // syntax analysis mode : 0 (do not parse)
+    //                      : 1 (only equal length)
+    //                      : 2 (equal or shorter)
+    public String parse(RecognizedPlate recognizedPlate, int syntaxAnalysisMode) throws IOException {
+<span class="pc bpc" id="L130" title="1 of 2 branches missed.">        if (syntaxAnalysisMode==0) {</span>
+<span class="nc" id="L131">            Main.rg.insertText(&quot; result : &quot;+recognizedPlate.getString()+&quot; --&gt; &lt;font size=15&gt;&quot;+recognizedPlate.getString()+&quot;&lt;/font&gt;&lt;hr&gt;&lt;br&gt;&quot;);</span>
+<span class="nc" id="L132">            return recognizedPlate.getString();</span>
+        }
+        
+<span class="fc" id="L135">        int length = recognizedPlate.chars.size();</span>
+<span class="fc" id="L136">        this.unFlagAll();</span>
+<span class="pc bpc" id="L137" title="1 of 2 branches missed.">        if (syntaxAnalysisMode==1) {</span>
+<span class="nc" id="L138">            this.flagEqualLength(length);</span>
+        } else {
+<span class="fc" id="L140">            this.flagEqualOrShorterLength(length);</span>
+        }
+        
+<span class="fc" id="L143">        Vector&lt;FinalPlate&gt; finalPlates = new Vector&lt;FinalPlate&gt;();</span>
+        
+<span class="fc bfc" id="L145" title="All 2 branches covered.">        for (PlateForm form : this.plateForms) {</span>
+<span class="fc bfc" id="L146" title="All 2 branches covered.">            if (!form.flagged) continue; // skip unflagged</span>
+<span class="fc bfc" id="L147" title="All 2 branches covered.">            for (int i=0; i&lt;= length - form.length(); i++) { // posuvanie formy po znacke</span>
+//                System.out.println(&quot;comparing &quot;+recognizedPlate.getString()+&quot; with form &quot;+form.name+&quot; and offset &quot;+i );
+<span class="fc" id="L149">                FinalPlate finalPlate = new FinalPlate();</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">                for (int ii=0; ii&lt;form.length(); ii++) { // prebehnut vsetky znaky formy</span>
+                    // form.getPosition(ii).allowedChars // zoznam povolenych
+<span class="fc" id="L152">                    RecognizedChar rc = recognizedPlate.getChar(ii+i); // znak na znacke</span>
+                    
+<span class="fc bfc" id="L154" title="All 2 branches covered.">                    if (form.getPosition(ii).isAllowed(rc.getPattern(0).getChar())) {</span>
+<span class="fc" id="L155">                        finalPlate.addChar(rc.getPattern(0).getChar());</span>
+                    } else { // treba vymenu
+<span class="fc" id="L157">                        finalPlate.requiredChanges++; // +1 za pismeno</span>
+<span class="pc bpc" id="L158" title="1 of 2 branches missed.">                        for (int x=0; x&lt;rc.getPatterns().size(); x++) {</span>
+<span class="fc bfc" id="L159" title="All 2 branches covered.">                            if (form.getPosition(ii).isAllowed(rc.getPattern(x).getChar())) {</span>
+<span class="fc" id="L160">                                RecognizedChar.RecognizedPattern rp = rc.getPattern(x);</span>
+<span class="fc" id="L161">                                finalPlate.requiredChanges += (rp.getCost() / 100);  // +x za jeho cost</span>
+<span class="fc" id="L162">                                finalPlate.addChar(rp.getChar());</span>
+<span class="fc" id="L163">                                break;</span>
+                            }
+                        }
+                    }
+                }
+//                System.out.println(&quot;adding &quot;+finalPlate.plate+&quot; with required changes &quot;+finalPlate.requiredChanges);
+<span class="fc" id="L169">                finalPlates.add(finalPlate);</span>
+            }
+<span class="fc" id="L171">        }</span>
+//        
+
+
+        
+        // tu este osetrit nespracovanie znacky v pripade ze nebola oznacena ziadna
+<span class="fc bfc" id="L177" title="All 2 branches covered.">        if (finalPlates.isEmpty()) return recognizedPlate.getString();</span>
+        // else :
+        // najst tu s najmensim poctom vymen
+<span class="fc" id="L180">        float minimalChanges = Float.POSITIVE_INFINITY;</span>
+<span class="fc" id="L181">        int minimalIndex = 0;</span>
+//        System.out.println(&quot;---&quot;);
+<span class="fc bfc" id="L183" title="All 2 branches covered.">        for (int i=0; i&lt;finalPlates.size(); i++) {</span>
+//            System.out.println(&quot;::&quot;+finalPlates.elementAt(i).plate+&quot; &quot;+finalPlates.elementAt(i).requiredChanges);
+<span class="fc bfc" id="L185" title="All 2 branches covered.">            if (finalPlates.elementAt(i).requiredChanges &lt;= minimalChanges) {</span>
+<span class="fc" id="L186">                minimalChanges = finalPlates.elementAt(i).requiredChanges;</span>
+<span class="fc" id="L187">                minimalIndex = i;</span>
+            }
+        }
+        
+<span class="fc" id="L191">        String toReturn = recognizedPlate.getString();</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">        if (finalPlates.elementAt(minimalIndex).requiredChanges &lt;= 2)</span>
+<span class="fc" id="L193">            toReturn = finalPlates.elementAt(minimalIndex).plate;</span>
+<span class="fc" id="L194">        return toReturn;</span>
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

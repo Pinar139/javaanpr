@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>NeuralPatternClassificator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.recognizer</a> &gt; <span class="el_source">NeuralPatternClassificator.java</span></div><h1>NeuralPatternClassificator.java</h1><pre class="source lang-java linenums">
+package javaanpr.recognizer;
+import java.io.File;
+import java.io.IOException;
+import java.util.Vector;
+import javaanpr.intelligence.Intelligence;
+import javaanpr.imageanalysis.Char;
+import javaanpr.neuralnetwork.NeuralNetwork;
+
+
+public class NeuralPatternClassificator extends CharacterRecognizer {
+    
+<span class="nc" id="L13">    private static int normalize_x =</span>
+<span class="nc" id="L14">            Intelligence.configurator.getIntProperty(&quot;char_normalizeddimensions_x&quot;);</span>
+<span class="nc" id="L15">    private static int normalize_y =</span>
+<span class="nc" id="L16">            Intelligence.configurator.getIntProperty(&quot;char_normalizeddimensions_y&quot;);</span>
+    
+   
+    
+    public NeuralNetwork network;
+    
+    
+    public NeuralPatternClassificator() throws Exception {
+<span class="nc" id="L24">        this(false);</span>
+<span class="nc" id="L25">    }</span>
+    
+<span class="nc" id="L27">    public NeuralPatternClassificator(boolean learn) throws Exception {</span>
+       
+        
+<span class="nc" id="L30">        Vector&lt;Integer&gt; dimensions = new Vector&lt;Integer&gt;();</span>
+        
+       
+        int inputLayerSize;
+<span class="nc bnc" id="L34" title="All 2 branches missed.">        if (Intelligence.configurator.getIntProperty(&quot;char_featuresExtractionMethod&quot;)==0)</span>
+<span class="nc" id="L35">            inputLayerSize = normalize_x * normalize_y;</span>
+<span class="nc" id="L36">        else inputLayerSize = CharacterRecognizer.features.length*4;</span>
+        
+        
+<span class="nc" id="L39">        dimensions.add(inputLayerSize);</span>
+<span class="nc" id="L40">        dimensions.add(Intelligence.configurator.getIntProperty(&quot;neural_topology&quot;));</span>
+<span class="nc" id="L41">        dimensions.add(CharacterRecognizer.alphabet.length);</span>
+<span class="nc" id="L42">        this.network = new NeuralNetwork(dimensions);</span>
+        
+<span class="nc bnc" id="L44" title="All 2 branches missed.">        if (learn) {</span>
+            
+<span class="nc" id="L46">            learnAlphabet(Intelligence.configurator.getStrProperty(&quot;char_learnAlphabetPath&quot;));</span>
+        } else {
+            
+<span class="nc" id="L49">            this.network = new NeuralNetwork(Intelligence.configurator.getPathProperty(&quot;char_neuralNetworkPath&quot;));</span>
+        }
+<span class="nc" id="L51">    }</span>
+    
+   
+    public RecognizedChar recognize(Char imgChar) { 
+<span class="nc" id="L55">        imgChar.normalize();</span>
+<span class="nc" id="L56">        Vector&lt;Double&gt; output = this.network.test(imgChar.extractFeatures());</span>
+<span class="nc" id="L57">        double max = 0.0;</span>
+<span class="nc" id="L58">        int indexMax = 0;</span>
+        
+<span class="nc" id="L60">        RecognizedChar recognized = new RecognizedChar();</span>
+        
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (int i=0; i&lt;output.size(); i++) {</span>
+<span class="nc" id="L63">            recognized.addPattern(recognized.new RecognizedPattern(NeuralPatternClassificator.alphabet[i], output.elementAt(i).floatValue()));</span>
+        }
+<span class="nc" id="L65">        recognized.render();</span>
+<span class="nc" id="L66">        recognized.sort(1);</span>
+<span class="nc" id="L67">        return recognized;</span>
+    }
+    
+
+    public NeuralNetwork.SetOfIOPairs.IOPair createNewPair(char chr, Char imgChar) { // uz normalizonvany
+<span class="nc" id="L72">        Vector&lt;Double&gt; vectorInput = imgChar.extractFeatures();</span>
+        
+        
+        
+<span class="nc" id="L76">        Vector&lt;Double&gt; vectorOutput = new Vector&lt;Double&gt;();</span>
+<span class="nc bnc" id="L77" title="All 2 branches missed.">        for (int i=0; i&lt;NeuralPatternClassificator.alphabet.length; i++)</span>
+<span class="nc bnc" id="L78" title="All 2 branches missed.">            if (chr == NeuralPatternClassificator.alphabet[i]) vectorOutput.add(1.0); else vectorOutput.add(0.0);</span>
+        
+
+        
+<span class="nc" id="L82">        return (new NeuralNetwork.SetOfIOPairs.IOPair(vectorInput, vectorOutput));</span>
+    }
+    
+    
+    public void learnAlphabet(String path) throws IOException {
+<span class="nc" id="L87">        String alphaString = &quot;0123456789abcdefghijklmnopqrstuvwxyz&quot;;        </span>
+<span class="nc" id="L88">        File folder = new File(path);</span>
+<span class="nc" id="L89">        NeuralNetwork.SetOfIOPairs train = new NeuralNetwork.SetOfIOPairs();</span>
+        
+<span class="nc bnc" id="L91" title="All 2 branches missed.">        for (String fileName : folder.list()) {</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">            if (alphaString.indexOf(fileName.toLowerCase().charAt(0))==-1)</span>
+<span class="nc" id="L93">                continue; </span>
+            
+<span class="nc" id="L95">            Char imgChar = new Char(path+File.separator+fileName);</span>
+<span class="nc" id="L96">            imgChar.normalize();</span>
+<span class="nc" id="L97">            train.addIOPair(this.createNewPair(fileName.toUpperCase().charAt(0), imgChar));</span>
+        }
+        
+<span class="nc" id="L100">        this.network.learn(train,</span>
+<span class="nc" id="L101">                Intelligence.configurator.getIntProperty(&quot;neural_maxk&quot;),</span>
+<span class="nc" id="L102">                Intelligence.configurator.getDoubleProperty(&quot;neural_eps&quot;),</span>
+<span class="nc" id="L103">                Intelligence.configurator.getDoubleProperty(&quot;neural_lambda&quot;),</span>
+<span class="nc" id="L104">                Intelligence.configurator.getDoubleProperty(&quot;neural_micro&quot;)</span>
+                );
+<span class="nc" id="L106">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Configurator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.configurator</a> &gt; <span class="el_source">Configurator.java</span></div><h1>Configurator.java</h1><pre class="source lang-java linenums">
+package javaanpr.configurator;
+
+import java.util.*;
+import java.io.*;
+import java.awt.*;
+
+public class Configurator {
+    /* Default name of configuration file */
+<span class="fc" id="L10">    private String fileName = &quot;config.xml&quot;;</span>
+    /* Configuration file's comment */
+<span class="fc" id="L12">    private String comment = &quot;This si global configuration file for Automatic Number Plate Recognition System&quot;;</span>
+    
+    /* Primary property list containing values from configuration file */
+    private Properties list;
+    
+<span class="fc" id="L17">    public Configurator() {</span>
+<span class="fc" id="L18">        list = new Properties();</span>
+        /* ***** BEGIN *** Definition of property defaults  ******* */
+        
+        // PHOTO
+        
+        // adaptive thresholding radius (0 = no adaptive)
+<span class="fc" id="L24">        this.setIntProperty(&quot;photo_adaptivethresholdingradius&quot;, 7); // 7 is recommanded</span>
+        
+        // BANDGRAPH - spracovanie horizontalnej projekcie detekovanej oblasti znacky
+        // na ose X sa detekuje peak, peakfoot, a nakoniec sa to nasobi p.d.m.c konstantou
+<span class="fc" id="L28">        this.setDoubleProperty(&quot;bandgraph_peakfootconstant&quot;, 0.55); //0.75</span>
+<span class="fc" id="L29">        this.setDoubleProperty(&quot;bandgraph_peakDiffMultiplicationConstant&quot;, 0.2);</span>
+        
+        // CARSNAPSHOT
+<span class="fc" id="L32">        this.setIntProperty(&quot;carsnapshot_distributormargins&quot;, 25);</span>
+<span class="fc" id="L33">        this.setIntProperty(&quot;carsnapshot_graphrankfilter&quot;, 9);</span>
+        
+        
+        // CARSNAPSHOTGRAPH
+<span class="fc" id="L37">        this.setDoubleProperty(&quot;carsnapshotgraph_peakfootconstant&quot;, 0.55); //0.55</span>
+<span class="fc" id="L38">        this.setDoubleProperty(&quot;carsnapshotgraph_peakDiffMultiplicationConstant&quot;, 0.1);</span>
+        
+        
+<span class="fc" id="L41">        this.setIntProperty(&quot;intelligence_skewdetection&quot;, 0);</span>
+        
+        // CHAR
+        // this.setDoubleProperty(&quot;char_contrastnormalizationconstant&quot;, 0.5);  //1.0
+<span class="fc" id="L45">        this.setIntProperty(&quot;char_normalizeddimensions_x&quot;, 8); //8</span>
+<span class="fc" id="L46">        this.setIntProperty(&quot;char_normalizeddimensions_y&quot;, 13); //13</span>
+<span class="fc" id="L47">        this.setIntProperty(&quot;char_resizeMethod&quot;,1); // 0=linear 1=average</span>
+<span class="fc" id="L48">        this.setIntProperty(&quot;char_featuresExtractionMethod&quot;,0); //0=map, 1=edge</span>
+<span class="fc" id="L49">        this.setStrProperty(&quot;char_neuralNetworkPath&quot;,&quot;./resources/neuralnetworks/network_avgres_813_map.xml&quot;);</span>
+<span class="fc" id="L50">        this.setStrProperty(&quot;char_learnAlphabetPath&quot;,&quot;./resources/alphabets/alphabet_8x13&quot;);</span>
+<span class="fc" id="L51">        this.setIntProperty(&quot;intelligence_classification_method&quot;,0); // 0 = pattern match ,1=nn</span>
+     
+        // PLATEGRAPH
+<span class="fc" id="L54">        this.setDoubleProperty(&quot;plategraph_peakfootconstant&quot;, 0.7); // urci sirku detekovanej medzery</span>
+<span class="fc" id="L55">        this.setDoubleProperty(&quot;plategraph_rel_minpeaksize&quot;, 0.86); // 0.85 // mensie cislo seka znaky, vacsie zase nespravne zdruzuje</span>
+        
+        // PLATEGRAPHHORIZONTALGRAPH
+<span class="fc" id="L58">        this.setDoubleProperty(&quot;platehorizontalgraph_peakfootconstant&quot;, 0.05);</span>
+<span class="fc" id="L59">        this.setIntProperty(&quot;platehorizontalgraph_detectionType&quot;,1); // 1=edgedetection 0=magnitudederivate</span>
+        
+        // PLATEVERICALGRAPH
+<span class="fc" id="L62">        this.setDoubleProperty(&quot;plateverticalgraph_peakfootconstant&quot;, 0.42);</span>
+        
+        // INTELLIGENCE
+<span class="fc" id="L65">        this.setIntProperty(&quot;intelligence_numberOfBands&quot;,3);</span>
+<span class="fc" id="L66">        this.setIntProperty(&quot;intelligence_numberOfPlates&quot;,3);</span>
+<span class="fc" id="L67">        this.setIntProperty(&quot;intelligence_numberOfChars&quot;,20);</span>
+        
+<span class="fc" id="L69">        this.setIntProperty(&quot;intelligence_minimumChars&quot;,5);</span>
+<span class="fc" id="L70">        this.setIntProperty(&quot;intelligence_maximumChars&quot;,15);</span>
+        
+        // plate heuristics
+<span class="fc" id="L73">        this.setDoubleProperty(&quot;intelligence_maxCharWidthDispersion&quot;,0.5); // in plate</span>
+<span class="fc" id="L74">        this.setDoubleProperty(&quot;intelligence_minPlateWidthHeightRatio&quot;,0.5);</span>
+<span class="fc" id="L75">        this.setDoubleProperty(&quot;intelligence_maxPlateWidthHeightRatio&quot;,15.0);</span>
+        
+        // char heuristics
+<span class="fc" id="L78">        this.setDoubleProperty(&quot;intelligence_minCharWidthHeightRatio&quot;,0.1);</span>
+<span class="fc" id="L79">        this.setDoubleProperty(&quot;intelligence_maxCharWidthHeightRatio&quot;,0.92);</span>
+<span class="fc" id="L80">        this.setDoubleProperty(&quot;intelligence_maxBrightnessCostDispersion&quot;, 0.161);</span>
+<span class="fc" id="L81">        this.setDoubleProperty(&quot;intelligence_maxContrastCostDispersion&quot;, 0.1);</span>
+<span class="fc" id="L82">        this.setDoubleProperty(&quot;intelligence_maxHueCostDispersion&quot;, 0.145);</span>
+<span class="fc" id="L83">        this.setDoubleProperty(&quot;intelligence_maxSaturationCostDispersion&quot;, 0.24); //0.15</span>
+<span class="fc" id="L84">        this.setDoubleProperty(&quot;intelligence_maxHeightCostDispersion&quot;, 0.2);</span>
+<span class="fc" id="L85">        this.setDoubleProperty(&quot;intelligence_maxSimilarityCostDispersion&quot;, 100);</span>
+        
+        // RECOGNITION
+<span class="fc" id="L88">        this.setIntProperty(&quot;intelligence_syntaxanalysis&quot;,2);</span>
+<span class="fc" id="L89">        this.setStrProperty(&quot;intelligence_syntaxDescriptionFile&quot;,&quot;./resources/syntax/syntax.xml&quot;);</span>
+        
+        // NEURAL NETWORK
+        //int maxK, double eps, double lambda, double micro
+        
+<span class="fc" id="L94">        this.setIntProperty(&quot;neural_maxk&quot;, 8000); // maximum K - maximalny pocet iteracii</span>
+<span class="fc" id="L95">        this.setDoubleProperty(&quot;neural_eps&quot;, 0.07); // epsilon - pozadovana presnost</span>
+<span class="fc" id="L96">        this.setDoubleProperty(&quot;neural_lambda&quot;, 0.05); // lambda factor - rychlost ucenia, velkost gradientu</span>
+<span class="fc" id="L97">        this.setDoubleProperty(&quot;neural_micro&quot;, 0.5); // micro - momentovy clen pre prekonavanie lokalnych extremov</span>
+        // top(log(m recognized units)) = 6
+<span class="fc" id="L99">        this.setIntProperty(&quot;neural_topology&quot;, 20); // topologia strednej vrstvy</span>
+        
+        /* ***** END ***** Definition of property defaults  ******* */
+        
+<span class="fc" id="L103">        this.setStrProperty(&quot;help_file_help&quot;,&quot;./resources/help/help.html&quot;);</span>
+<span class="fc" id="L104">        this.setStrProperty(&quot;help_file_about&quot;,&quot;./resources/help/about.html&quot;);</span>
+<span class="fc" id="L105">        this.setStrProperty(&quot;reportgeneratorcss&quot;,&quot;./resources/reportgenerator/style.css&quot;);</span>
+<span class="fc" id="L106">    }</span>
+    public Configurator(String path) {
+<span class="fc" id="L108">        this();</span>
+        try {
+<span class="fc" id="L110">            loadConfiguration(path);</span>
+<span class="nc" id="L111">        } catch (Exception ex) {</span>
+<span class="nc" id="L112">            System.out.println(&quot;Error: Couldn't load configuration file &quot;+path);</span>
+<span class="nc" id="L113">            System.exit(1);</span>
+<span class="fc" id="L114">        }</span>
+<span class="fc" id="L115">    }</span>
+    
+    public void setConfigurationFileName(String name) {
+<span class="nc" id="L118">        this.fileName = name;</span>
+<span class="nc" id="L119">    }</span>
+    
+    public String getConfigurationFileName() {
+<span class="nc" id="L122">        return this.fileName;</span>
+    }
+    
+    public String getStrProperty(String name) {
+<span class="fc" id="L126">        return list.getProperty(name);</span>
+    }
+    
+    public String getPathProperty(String name) {
+<span class="fc" id="L130">        return this.getStrProperty(name).replace('/',File.separatorChar);</span>
+        
+    }
+    
+    public void setStrProperty(String name, String value) {
+<span class="fc" id="L135">        list.setProperty(name, value);</span>
+<span class="fc" id="L136">    }</span>
+    
+    public int getIntProperty(String name) throws NumberFormatException {
+<span class="fc" id="L139">        return Integer.decode(list.getProperty(name));</span>
+    }
+    
+    public void setIntProperty(String name, int value) {
+<span class="fc" id="L143">        list.setProperty(name, String.valueOf(value));</span>
+<span class="fc" id="L144">    }</span>
+    
+    public double getDoubleProperty(String name) throws NumberFormatException {
+<span class="fc" id="L147">        return Double.parseDouble(list.getProperty(name));</span>
+    }
+    
+    public void setDoubleProperty(String name, double value) {
+<span class="fc" id="L151">        list.setProperty(name, String.valueOf(value));</span>
+<span class="fc" id="L152">    }</span>
+    
+    public Color getColorProperty(String name) {
+<span class="nc" id="L155">        return new Color(Integer.decode(list.getProperty(name)));</span>
+    }
+    
+    public void setColorProperty(String name, Color value) {
+<span class="nc" id="L159">        list.setProperty(name, String.valueOf(value.getRGB()));</span>
+<span class="nc" id="L160">    }</span>
+    
+    public void saveConfiguration() throws IOException {
+<span class="nc" id="L163">        FileOutputStream os = new FileOutputStream(fileName);</span>
+<span class="nc" id="L164">        list.storeToXML(os, comment);</span>
+<span class="nc" id="L165">    }</span>
+    
+    public void saveConfiguration(String arg_file) throws IOException {
+<span class="nc" id="L168">        FileOutputStream os = new FileOutputStream(arg_file);</span>
+<span class="nc" id="L169">        list.storeToXML(os, comment);</span>
+<span class="nc" id="L170">    }</span>
+    
+    public void loadConfiguration() throws IOException {
+<span class="nc" id="L173">        FileInputStream is = new  FileInputStream(fileName);</span>
+<span class="nc" id="L174">        list.loadFromXML(is);</span>
+<span class="nc" id="L175">    }</span>
+    
+    public void loadConfiguration(String arg_file) throws IOException {
+<span class="fc" id="L178">        FileInputStream is = new  FileInputStream(arg_file);</span>
+<span class="fc" id="L179">        list.loadFromXML(is);</span>
+<span class="fc" id="L180">    }</span>
+    
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>PixelMap.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">PixelMap.java</span></div><h1>PixelMap.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.util.Stack;
+import java.util.Vector;
+
+
+public class PixelMap {
+    private class Point {
+        int x;
+        int y;
+
+<span class="fc" id="L15">        Point(int x, int y) {</span>
+<span class="fc" id="L16">            this.x=x;</span>
+<span class="fc" id="L17">            this.y=y;</span>
+    
+<span class="fc" id="L19">        }</span>
+        boolean equals(Point p2) {
+<span class="fc bfc" id="L21" title="All 4 branches covered.">            return p2.x == this.x &amp;&amp; p2.y == this.y;</span>
+        }
+        boolean equals(int x, int y) {
+<span class="nc bnc" id="L24" title="All 4 branches missed.">            return x == this.x &amp;&amp; y == this.y;            </span>
+        }
+        public boolean value() {
+<span class="nc" id="L27">            return matrix[x][y];</span>
+        }
+    }
+    
+<span class="fc" id="L31">    private class PointSet extends Stack&lt;Point&gt; {</span>
+        static final long serialVersionUID = 0;
+        public void removePoint(Point p) {
+<span class="fc" id="L34">            Point toRemove = null;</span>
+<span class="fc bfc" id="L35" title="All 2 branches covered.">            for (Point px : this) {</span>
+<span class="fc bfc" id="L36" title="All 2 branches covered.">                if (px.equals(p)) toRemove = px;</span>
+<span class="fc" id="L37">            }</span>
+<span class="fc" id="L38">            this.remove(toRemove);</span>
+<span class="fc" id="L39">        }</span>
+        
+    }
+    
+<span class="fc" id="L43">    public class PieceSet extends Vector&lt;Piece&gt; {</span>
+        static final long serialVersionUID = 0;
+    }
+<span class="fc" id="L46">    private Piece bestPiece = null;</span>
+   
+   
+<span class="fc" id="L49">    public class Piece extends PointSet {</span>
+        static final long serialVersionUID = 0;
+        public int mostLeftPoint;
+        public int mostRightPoint;
+        public int mostTopPoint;
+        public int mostBottomPoint;
+        public int width;
+        public int height;
+        public int centerX;
+        public int centerY;
+        public float magnitude;
+        public int numberOfBlackPoints;
+        public int numberOfAllPoints;
+        
+        public BufferedImage render() {
+<span class="fc bfc" id="L64" title="All 2 branches covered.">            if (numberOfAllPoints==0) return null;</span>
+<span class="fc" id="L65">            BufferedImage image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="fc bfc" id="L66" title="All 2 branches covered.">            for (int x=this.mostLeftPoint; x&lt;=this.mostRightPoint; x++) {</span>
+<span class="fc bfc" id="L67" title="All 2 branches covered.">                for (int y=this.mostTopPoint; y&lt;=this.mostBottomPoint; y++) {</span>
+<span class="fc bfc" id="L68" title="All 2 branches covered.">                    if (matrix[x][y]) {</span>
+<span class="fc" id="L69">                        image.setRGB(x - this.mostLeftPoint,</span>
+<span class="fc" id="L70">                                     y - this.mostTopPoint, Color.BLACK.getRGB() );</span>
+                    } else {
+<span class="fc" id="L72">                        image.setRGB(x - this.mostLeftPoint,</span>
+<span class="fc" id="L73">                                     y - this.mostTopPoint, Color.WHITE.getRGB() );</span>
+                    }
+                }
+            }
+<span class="fc" id="L77">            return image;</span>
+        }
+
+        public void createStatistics() {
+<span class="fc" id="L81">            this.mostLeftPoint = this.mostLeftPoint();</span>
+<span class="fc" id="L82">            this.mostRightPoint = this.mostRightPoint();</span>
+<span class="fc" id="L83">            this.mostTopPoint = this.mostTopPoint();</span>
+<span class="fc" id="L84">            this.mostBottomPoint = this.mostBottomPoint();</span>
+<span class="fc" id="L85">            this.width = this.mostRightPoint - this.mostLeftPoint + 1;</span>
+<span class="fc" id="L86">            this.height = this.mostBottomPoint - this.mostTopPoint + 1;</span>
+<span class="fc" id="L87">            this.centerX = (this.mostLeftPoint + this.mostRightPoint) / 2;</span>
+<span class="fc" id="L88">            this.centerY = (this.mostTopPoint + this.mostBottomPoint) / 2;</span>
+<span class="fc" id="L89">            this.numberOfBlackPoints = this.numberOfBlackPoints();</span>
+<span class="fc" id="L90">            this.numberOfAllPoints = this.numberOfAllPoints();</span>
+<span class="fc" id="L91">            this.magnitude = this.magnitude();</span>
+<span class="fc" id="L92">        }</span>
+        public int cost() { 
+<span class="fc" id="L94">            return this.numberOfAllPoints - this.numberOfBlackPoints();</span>
+        }
+        public void bleachPiece() {
+<span class="fc bfc" id="L97" title="All 2 branches covered.">            for (Point p : this) {</span>
+<span class="fc" id="L98">                matrix[p.x][p.y] = false;</span>
+<span class="fc" id="L99">            }</span>
+<span class="fc" id="L100">        }</span>
+        private float magnitude() {
+<span class="fc" id="L102">            return ((float)this.numberOfBlackPoints / this.numberOfAllPoints);</span>
+        }
+        private int numberOfBlackPoints() {
+<span class="fc" id="L105">            return this.size();</span>
+        }
+        private int numberOfAllPoints() {
+<span class="fc" id="L108">            return this.width * this.height;</span>
+        }
+       
+        private int mostLeftPoint() {
+<span class="fc" id="L112">            int position = Integer.MAX_VALUE;</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            for (Point p : this) position = Math.min(position, p.x);</span>
+<span class="fc" id="L114">            return position;</span>
+        }
+        private int mostRightPoint() {
+<span class="fc" id="L117">            int position = 0;</span>
+<span class="fc bfc" id="L118" title="All 2 branches covered.">            for (Point p : this) position = Math.max(position, p.x);</span>
+<span class="fc" id="L119">            return position;</span>
+        }   
+        private int mostTopPoint() {
+<span class="fc" id="L122">            int position = Integer.MAX_VALUE;</span>
+<span class="fc bfc" id="L123" title="All 2 branches covered.">            for (Point p : this) position = Math.min(position, p.y);</span>
+<span class="fc" id="L124">            return position;</span>
+        }
+        private int mostBottomPoint() {
+<span class="fc" id="L127">            int position = 0;</span>
+<span class="fc bfc" id="L128" title="All 2 branches covered.">            for (Point p : this) position = Math.max(position, p.y);</span>
+<span class="fc" id="L129">            return position;</span>
+        }   
+    }
+   
+    
+   
+    boolean[][] matrix;
+    private int width;
+    private int height;
+    
+<span class="fc" id="L139">    public PixelMap(Photo bi) {</span>
+<span class="fc" id="L140">        this.matrixInit(bi);</span>
+<span class="fc" id="L141">    }</span>
+    
+    void matrixInit(Photo bi) {
+<span class="fc" id="L144">        this.width = bi.getWidth();</span>
+<span class="fc" id="L145">        this.height = bi.getHeight();                </span>
+
+<span class="fc" id="L147">        this.matrix = new boolean[this.width][this.height];</span>
+        
+<span class="fc bfc" id="L149" title="All 2 branches covered.">        for (int x=0; x&lt;this.width; x++) {</span>
+<span class="fc bfc" id="L150" title="All 2 branches covered.">            for (int y=0; y&lt;this.height; y++) {</span>
+<span class="fc bfc" id="L151" title="All 2 branches covered.">                this.matrix[x][y] = bi.getBrightness(x,y) &lt; 0.5;</span>
+            }
+        }
+<span class="fc" id="L154">    }</span>
+    
+    
+    public BufferedImage render() {
+<span class="nc" id="L158">        BufferedImage image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++) {</span>
+<span class="nc bnc" id="L160" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++) {</span>
+<span class="nc bnc" id="L161" title="All 2 branches missed.">                if (this.matrix[x][y]) {</span>
+<span class="nc" id="L162">                    image.setRGB(x,y, Color.BLACK.getRGB() );</span>
+                } else {
+<span class="nc" id="L164">                    image.setRGB(x,y, Color.WHITE.getRGB() );</span>
+                }
+            }
+        }
+<span class="nc" id="L168">        return image;</span>
+    }
+    
+    public Piece getBestPiece() {
+<span class="fc" id="L172">        this.reduceOtherPieces();</span>
+<span class="fc bfc" id="L173" title="All 2 branches covered.">        if (this.bestPiece == null) return new Piece();</span>
+<span class="fc" id="L174">        return this.bestPiece;</span>
+    }
+    
+    private boolean getPointValue(int x, int y) {
+       
+<span class="nc bnc" id="L179" title="All 8 branches missed.">        if (x&lt;0 || y&lt;0 || x&gt;=this.width || y&gt;=this.height) return false;</span>
+<span class="nc" id="L180">        return matrix[x][y];</span>
+    }
+    
+    private boolean isBoundaryPoint(int x, int y) {
+        
+<span class="nc bnc" id="L185" title="All 2 branches missed.">        if (!getPointValue(x,y)) return false;</span>
+        
+<span class="nc bnc" id="L187" title="All 2 branches missed.">        return !getPointValue(x-1,y-1) ||</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                !getPointValue(x-1,y+1) ||</span>
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                !getPointValue(x+1,y-1) ||</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                !getPointValue(x+1,y+1) ||</span>
+<span class="nc bnc" id="L191" title="All 2 branches missed.">                !getPointValue(x,y+1) ||</span>
+<span class="nc bnc" id="L192" title="All 2 branches missed.">                !getPointValue(x,y-1) ||</span>
+<span class="nc bnc" id="L193" title="All 2 branches missed.">                !getPointValue(x+1,y) ||</span>
+<span class="nc bnc" id="L194" title="All 2 branches missed.">                !getPointValue(x-1,y);</span>
+    }
+
+    
+    
+    
+    private int n(int x, int y) { 
+<span class="nc" id="L201">        int n=0;</span>
+<span class="nc bnc" id="L202" title="All 2 branches missed.">        if (getPointValue(x-1,y-1)) n++;</span>
+<span class="nc bnc" id="L203" title="All 2 branches missed.">        if (getPointValue(x-1,y+1)) n++;</span>
+<span class="nc bnc" id="L204" title="All 2 branches missed.">        if (getPointValue(x+1,y-1)) n++;</span>
+<span class="nc bnc" id="L205" title="All 2 branches missed.">        if (getPointValue(x+1,y+1)) n++;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        if (getPointValue(x,y+1)) n++;</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        if (getPointValue(x,y-1)) n++;</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (getPointValue(x+1,y)) n++;</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">        if (getPointValue(x-1,y)) n++;</span>
+<span class="nc" id="L210">        return n;</span>
+    }
+    
+    
+    private int t(int x, int y) { 
+<span class="nc" id="L215">        int n=0; </span>
+<span class="nc bnc" id="L216" title="All 2 branches missed.">        for (int i=2; i&lt;=8; i++) {</span>
+<span class="nc bnc" id="L217" title="All 4 branches missed.">            if (!p(i,x,y) &amp;&amp; p(i+1,x,y)) n++;</span>
+        }
+<span class="nc bnc" id="L219" title="All 4 branches missed.">        if (!p(9,x,y) &amp;&amp; p(2,x,y)) n++;</span>
+<span class="nc" id="L220">        return n;</span>
+    }
+    
+   
+    private boolean p(int i, int x, int y) {
+<span class="nc bnc" id="L225" title="All 2 branches missed.">        if (i==1) return getPointValue(x,y);</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">        if (i==2) return getPointValue(x,y-1);</span>
+<span class="nc bnc" id="L227" title="All 2 branches missed.">        if (i==3) return getPointValue(x+1,y-1);</span>
+<span class="nc bnc" id="L228" title="All 2 branches missed.">        if (i==4) return getPointValue(x+1,y);</span>
+<span class="nc bnc" id="L229" title="All 2 branches missed.">        if (i==5) return getPointValue(x+1,y+1);</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        if (i==6) return getPointValue(x,y+1);</span>
+<span class="nc bnc" id="L231" title="All 2 branches missed.">        if (i==7) return getPointValue(x-1,y+1);</span>
+<span class="nc bnc" id="L232" title="All 2 branches missed.">        if (i==8) return getPointValue(x-1,y);</span>
+<span class="nc bnc" id="L233" title="All 2 branches missed.">        if (i==9) return getPointValue(x-1,y-1);</span>
+<span class="nc" id="L234">        return false;</span>
+    }
+    
+    private boolean step1passed(int x, int y) {
+<span class="nc" id="L238">        int n = n(x,y);</span>
+<span class="nc bnc" id="L239" title="All 4 branches missed.">        return ( </span>
+           (2 &lt;= n &amp;&amp; n &lt;= 6) &amp;&amp;     
+<span class="nc bnc" id="L241" title="All 2 branches missed.">           t(x,y) == 1 &amp;&amp;</span>
+<span class="nc bnc" id="L242" title="All 6 branches missed.">           ( !p(2,x,y) || !p(4,x,y) || !p(6,x,y)  ) &amp;&amp;</span>
+<span class="nc bnc" id="L243" title="All 6 branches missed.">           ( !p(4,x,y) || !p(6,x,y) || !p(8,x,y)  )</span>
+    );
+    }
+    private boolean step2passed(int x, int y) {
+<span class="nc" id="L247">        int n = n(x,y);</span>
+<span class="nc bnc" id="L248" title="All 4 branches missed.">        return ( </span>
+           (2 &lt;= n &amp;&amp; n &lt;= 6) &amp;&amp;     
+<span class="nc bnc" id="L250" title="All 2 branches missed.">           t(x,y) == 1 &amp;&amp;</span>
+<span class="nc bnc" id="L251" title="All 6 branches missed.">           ( !p(2,x,y) || !p(4,x,y) || !p(8,x,y)  ) &amp;&amp;</span>
+<span class="nc bnc" id="L252" title="All 6 branches missed.">           ( !p(2,x,y) || !p(6,x,y) || !p(8,x,y)  )</span>
+        );
+    }    
+    private void findBoundaryPoints(PointSet set) {
+<span class="nc bnc" id="L256" title="All 2 branches missed.">        if (!set.isEmpty()) set.clear();</span>
+<span class="nc bnc" id="L257" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++) {</span>
+<span class="nc bnc" id="L258" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++) {</span>
+<span class="nc bnc" id="L259" title="All 2 branches missed.">                if (isBoundaryPoint(x,y)) set.add(new Point(x,y));</span>
+            }
+        }
+<span class="nc" id="L262">    }</span>
+    
+    public PixelMap skeletonize() { 
+   
+<span class="nc" id="L266">        PointSet flaggedPoints = new PointSet();</span>
+<span class="nc" id="L267">        PointSet boundaryPoints = new PointSet();</span>
+        boolean cont;
+        
+        do {
+<span class="nc" id="L271">            cont = false;</span>
+<span class="nc" id="L272">            findBoundaryPoints(boundaryPoints);</span>
+           
+<span class="nc bnc" id="L274" title="All 2 branches missed.">            for (Point p : boundaryPoints) {</span>
+<span class="nc bnc" id="L275" title="All 2 branches missed.">                if (step1passed(p.x, p.y)) flaggedPoints.add(p);</span>
+<span class="nc" id="L276">            }</span>
+            
+<span class="nc bnc" id="L278" title="All 2 branches missed.">            if (!flaggedPoints.isEmpty()) cont = true;</span>
+<span class="nc bnc" id="L279" title="All 2 branches missed.">            for (Point p : flaggedPoints) {</span>
+<span class="nc" id="L280">                this.matrix[p.x][p.y] = false;</span>
+<span class="nc" id="L281">                boundaryPoints.remove(p);</span>
+<span class="nc" id="L282">            }</span>
+<span class="nc" id="L283">            flaggedPoints.clear();</span>
+            
+<span class="nc bnc" id="L285" title="All 2 branches missed.">            for (Point p : boundaryPoints) {</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">                if (step2passed(p.x, p.y)) flaggedPoints.add(p);</span>
+<span class="nc" id="L287">            }            </span>
+            
+<span class="nc bnc" id="L289" title="All 2 branches missed.">            if (!flaggedPoints.isEmpty()) cont = true;</span>
+<span class="nc bnc" id="L290" title="All 2 branches missed.">            for (Point p : flaggedPoints) {</span>
+<span class="nc" id="L291">                this.matrix[p.x][p.y] = false;</span>
+<span class="nc" id="L292">            } </span>
+<span class="nc" id="L293">            boundaryPoints.clear();</span>
+<span class="nc" id="L294">            flaggedPoints.clear();</span>
+<span class="nc bnc" id="L295" title="All 2 branches missed.">        } while (cont);</span>
+        
+<span class="nc" id="L297">        return (this);</span>
+    }
+
+ 
+    
+    public PixelMap reduceNoise() {
+<span class="nc" id="L303">        PointSet pointsToReduce = new PointSet();</span>
+<span class="nc bnc" id="L304" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++) {</span>
+<span class="nc bnc" id="L305" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++) {</span>
+<span class="nc bnc" id="L306" title="All 2 branches missed.">                if (n(x,y) &lt; 4) pointsToReduce.add(new Point(x,y)); </span>
+            }
+        }
+        
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        for (Point p : pointsToReduce) this.matrix[p.x][p.y] = false;</span>
+<span class="nc" id="L311">        return (this);</span>
+    }
+    
+   
+    
+    private boolean isInPieces(PieceSet pieces, int x, int y) {
+<span class="nc bnc" id="L317" title="All 2 branches missed.">        for (Piece piece : pieces) // pre vsetky kusky</span>
+<span class="nc bnc" id="L318" title="All 2 branches missed.">            for (Point point : piece) // pre vsetky body na kusku</span>
+<span class="nc bnc" id="L319" title="All 2 branches missed.">                if (point.equals(x,y)) return true;</span>
+        
+<span class="nc" id="L321">        return false;</span>
+    }
+    
+    private boolean seedShouldBeAdded(Piece piece, Point p) {
+        // ak sa nevymyka okrajom 
+<span class="fc bfc" id="L326" title="All 8 branches covered.">        if (p.x&lt;0 || p.y&lt;0 || p.x&gt;=this.width || p.y&gt;=this.height) return false;</span>
+        // ak je cierny, 
+<span class="fc bfc" id="L328" title="All 2 branches covered.">        if (!this.matrix[p.x][p.y]) return false;</span>
+        // ak este nie je sucastou ziadneho kuska
+<span class="fc bfc" id="L330" title="All 2 branches covered.">        for (Point piecePoint : piece)</span>
+<span class="fc bfc" id="L331" title="All 2 branches covered.">            if (piecePoint.equals(p)) return false;</span>
+<span class="fc" id="L332">        return true;</span>
+    }
+    
+    // vytvori novy piece, najde okolie (piece) napcha donho vsetky body a vrati
+    // vstupom je nejaka mnozina &quot;ciernych&quot; bodov, z ktorej algoritmus tie
+    // body  vybera
+    private Piece createPiece(PointSet unsorted) {
+
+<span class="fc" id="L340">        Piece piece = new Piece();</span>
+        
+<span class="fc" id="L342">        PointSet stack = new PointSet();</span>
+<span class="fc" id="L343">        stack.push(unsorted.lastElement());</span>
+        
+<span class="fc bfc" id="L345" title="All 2 branches covered.">        while(!stack.isEmpty()) {</span>
+<span class="fc" id="L346">            Point p = stack.pop();</span>
+<span class="fc bfc" id="L347" title="All 2 branches covered.">            if (seedShouldBeAdded(piece, p)) {</span>
+<span class="fc" id="L348">                piece.add(p);</span>
+<span class="fc" id="L349">                unsorted.removePoint(p);</span>
+<span class="fc" id="L350">                stack.push(new Point(p.x+1, p.y));</span>
+<span class="fc" id="L351">                stack.push(new Point(p.x-1, p.y));</span>
+<span class="fc" id="L352">                stack.push(new Point(p.x, p.y+1));</span>
+<span class="fc" id="L353">                stack.push(new Point(p.x, p.y-1));</span>
+            }
+<span class="fc" id="L355">        }</span>
+<span class="fc" id="L356">        piece.createStatistics();</span>
+<span class="fc" id="L357">        return piece;</span>
+    }
+    
+    public PieceSet findPieces() {
+        //boolean continueFlag;
+<span class="fc" id="L362">        PieceSet pieces = new PieceSet();</span>
+
+        // vsetky cierne body na kopu.
+<span class="fc" id="L365">        PointSet unsorted = new PointSet();</span>
+<span class="fc bfc" id="L366" title="All 2 branches covered.">        for (int x=0; x&lt;this.width; x++) </span>
+<span class="fc bfc" id="L367" title="All 2 branches covered.">            for (int y=0; y&lt;this.height; y++)</span>
+<span class="fc bfc" id="L368" title="All 2 branches covered.">                if (this.matrix[x][y]) unsorted.add(new Point(x,y));</span>
+        
+        // pre kazdy cierny bod z kopy, 
+<span class="fc bfc" id="L371" title="All 2 branches covered.">        while (!unsorted.isEmpty()) {</span>
+            // createPiece vytvori novy piece s tym ze vsetky pouzite body vyhodi von z kopy
+            
+<span class="fc" id="L374">            pieces.add(createPiece(unsorted));</span>
+        }
+        /*
+        do {
+            continueFlag = false;
+            boolean loopBreak = false;
+            for (int x = 0; x&lt;this.width; x++) {
+                for (int y = 0; y&lt;this.height; y++) { // for each pixel
+                    // ak je pixel cierny, a nie je sucastou ziadneho kuska
+                    if (this.matrix[x][y] &amp;&amp; !isInPieces(pieces,x,y)) {
+                        continueFlag = true;
+                        pieces.add(createPiece(x,y));
+                    } 
+                }// for y
+            } // for x
+        } while (continueFlag);
+         */
+<span class="fc" id="L391">        return pieces;</span>
+    }
+       
+    
+    // redukuje ostatne pieces a vracia ten najlepsi
+    public PixelMap reduceOtherPieces() {
+<span class="pc bpc" id="L397" title="1 of 2 branches missed.">        if (this.bestPiece != null) return this; // bestPiece uz je , netreba dalej nic</span>
+        
+<span class="fc" id="L399">        PieceSet pieces = findPieces();</span>
+<span class="fc" id="L400">        int maxCost = 0;</span>
+<span class="fc" id="L401">        int maxIndex = 0;</span>
+        // najdeme najlepsi cost
+<span class="fc bfc" id="L403" title="All 2 branches covered.">        for (int i=0; i&lt;pieces.size(); i++) {</span>
+<span class="fc bfc" id="L404" title="All 2 branches covered.">            if (pieces.elementAt(i).cost() &gt; maxCost) {</span>
+<span class="fc" id="L405">                maxCost = pieces.elementAt(i).cost();</span>
+<span class="fc" id="L406">                maxIndex = i;</span>
+            }
+        }
+        
+        // a ostatne zmazeme
+<span class="fc bfc" id="L411" title="All 2 branches covered.">        for (int i=0; i&lt;pieces.size(); i++) {</span>
+<span class="fc bfc" id="L412" title="All 2 branches covered.">            if (i != maxIndex) pieces.elementAt(i).bleachPiece();</span>
+        }
+<span class="fc bfc" id="L414" title="All 2 branches covered.">        if (!pieces.isEmpty()) this.bestPiece = pieces.elementAt(maxIndex);</span>
+<span class="fc" id="L415">        return this;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

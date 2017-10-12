@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>KnnPatternClassificator.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.recognizer</a> &gt; <span class="el_source">KnnPatternClassificator.java</span></div><h1>KnnPatternClassificator.java</h1><pre class="source lang-java linenums">
+
+package javaanpr.recognizer;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Vector;
+import javaanpr.imageanalysis.Char;
+import javaanpr.intelligence.Intelligence;
+
+
+public class KnnPatternClassificator extends CharacterRecognizer {
+    Vector&lt;Vector&lt;Double&gt;&gt; learnVectors;
+    
+<span class="fc" id="L15">    public KnnPatternClassificator() throws IOException {</span>
+<span class="fc" id="L16">        String path = Intelligence.configurator.getPathProperty(&quot;char_learnAlphabetPath&quot;);</span>
+<span class="fc" id="L17">        String alphaString = &quot;0123456789abcdefghijklmnopqrstuvwxyz&quot;;</span>
+        
+       
+<span class="fc" id="L20">        this.learnVectors = new Vector&lt;Vector&lt;Double&gt;&gt;();</span>
+<span class="fc bfc" id="L21" title="All 2 branches covered.">        for (int i=0; i&lt;alphaString.length(); i++) this.learnVectors.add(null);</span>
+        
+<span class="fc" id="L23">        File folder = new File(path);</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">        for (String fileName : folder.list()) {</span>
+<span class="fc" id="L25">            int alphaPosition = alphaString.indexOf(fileName.toLowerCase().charAt(0));</span>
+<span class="pc bpc" id="L26" title="1 of 2 branches missed.">            if (alphaPosition==-1)  continue; </span>
+
+<span class="fc" id="L28">            Char imgChar = new Char(path+File.separator+fileName);</span>
+<span class="fc" id="L29">            imgChar.normalize();</span>
+            
+<span class="fc" id="L31">            this.learnVectors.set(alphaPosition, imgChar.extractFeatures());</span>
+        }
+        
+       
+<span class="fc bfc" id="L35" title="All 2 branches covered.">        for (int i=0; i&lt;alphaString.length(); i++) </span>
+<span class="pc bpc" id="L36" title="1 of 2 branches missed.">            if (this.learnVectors.elementAt(i)==null) throw new IOException(&quot;Warning : alphabet in &quot;+path+&quot; is not complete&quot;);</span>
+      
+<span class="fc" id="L38">    }</span>
+ 
+    public RecognizedChar recognize(Char chr) throws Exception {
+<span class="fc" id="L41">        Vector&lt;Double&gt; tested = chr.extractFeatures();</span>
+<span class="fc" id="L42">        int minx = 0;</span>
+<span class="fc" id="L43">        float minfx = Float.POSITIVE_INFINITY;</span>
+        
+<span class="fc" id="L45">        RecognizedChar recognized = new RecognizedChar();</span>
+        
+<span class="fc bfc" id="L47" title="All 2 branches covered.">        for (int x = 0; x &lt; this.learnVectors.size(); x++) {</span>
+           
+<span class="fc" id="L49">            float fx = this.simplifiedEuclideanDistance(tested, this.learnVectors.elementAt(x));</span>
+
+<span class="fc" id="L51">            recognized.addPattern(recognized.new RecognizedPattern(KnnPatternClassificator.alphabet[x], fx));</span>
+            
+            
+        }
+
+<span class="fc" id="L56">        recognized.sort(0);</span>
+<span class="fc" id="L57">        return recognized;</span>
+    }
+    
+    public float difference(Vector&lt;Double&gt; vectorA, Vector&lt;Double&gt; vectorB) {
+<span class="nc" id="L61">        float diff = 0;</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">        for (int x = 0; x&lt;vectorA.size(); x++) {</span>
+<span class="nc" id="L63">            diff += Math.abs(vectorA.elementAt(x) - vectorB.elementAt(x));</span>
+        }
+<span class="nc" id="L65">        return diff;</span>
+    }
+    
+    public float simplifiedEuclideanDistance(Vector&lt;Double&gt; vectorA, Vector&lt;Double&gt; vectorB) {
+<span class="fc" id="L69">        float diff = 0;</span>
+        float partialDiff;
+<span class="fc bfc" id="L71" title="All 2 branches covered.">        for (int x = 0; x&lt;vectorA.size(); x++) {</span>
+<span class="fc" id="L72">            partialDiff = (float)Math.abs(vectorA.elementAt(x) - vectorB.elementAt(x));</span>
+<span class="fc" id="L73">            diff += partialDiff * partialDiff;</span>
+        }
+<span class="fc" id="L75">        return diff;        </span>
+    }
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

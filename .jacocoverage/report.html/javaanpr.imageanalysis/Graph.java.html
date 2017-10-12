@@ -1,0 +1,433 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Graph.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">Graph.java</span></div><h1>Graph.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
+//import java.util.Collections;
+//import java.util.Comparator;
+import java.util.Vector;
+
+<span class="fc" id="L12">public class Graph {</span>
+    public class Peak {
+        public int left, center, right;
+<span class="fc" id="L15">        public Peak(int left, int center, int right) {</span>
+<span class="fc" id="L16">            this.left = left;</span>
+<span class="fc" id="L17">            this.center = center;</span>
+<span class="fc" id="L18">            this.right = right;</span>
+<span class="fc" id="L19">        }</span>
+<span class="fc" id="L20">        public Peak(int left, int right) {</span>
+<span class="fc" id="L21">            this.left = left;</span>
+<span class="fc" id="L22">            this.center = (left+right)/2;</span>
+<span class="fc" id="L23">            this.right = right;</span>
+<span class="fc" id="L24">        }        </span>
+        public int getLeft() {
+<span class="fc" id="L26">            return this.left;</span>
+        }
+        public int getRight() {
+<span class="fc" id="L29">            return this.right;</span>
+        }
+        public int getCenter() {
+<span class="fc" id="L32">            return this.center;</span>
+        }
+        public int getDiff() {
+<span class="fc" id="L35">            return this.right - this.left;</span>
+        }
+        public void setLeft(int left) {
+<span class="nc" id="L38">            this.left = left;</span>
+<span class="nc" id="L39">        }</span>
+        public void setCenter(int center) {
+<span class="nc" id="L41">            this.center = center;</span>
+<span class="nc" id="L42">        }</span>
+        public void setRight(int right) {
+<span class="nc" id="L44">            this.right = right;</span>
+<span class="nc" id="L45">        }</span>
+    }
+    static public class ProbabilityDistributor {
+        float center;
+        float power;
+        int leftMargin;
+        int rightMargin;
+<span class="fc" id="L52">        public ProbabilityDistributor(float center, float power, int leftMargin, int rightMargin) {</span>
+<span class="fc" id="L53">            this.center = center;</span>
+<span class="fc" id="L54">            this.power = power;</span>
+<span class="fc" id="L55">            this.leftMargin = Math.max(1,leftMargin);</span>
+<span class="fc" id="L56">            this.rightMargin = Math.max(1,rightMargin);</span>
+<span class="fc" id="L57">        }</span>
+        
+        private float distributionFunction(float value, float positionPercentage) {
+<span class="fc" id="L60">            return value * (1 - this.power * Math.abs(positionPercentage - this.center) );</span>
+        }
+        
+        public Vector&lt;Float&gt; distribute(Vector&lt;Float&gt; peaks) {
+<span class="fc" id="L64">            Vector&lt;Float&gt; distributedPeaks = new Vector&lt;Float&gt;();</span>
+<span class="fc bfc" id="L65" title="All 2 branches covered.">            for (int i=0; i&lt;peaks.size(); i++) {</span>
+<span class="fc bfc" id="L66" title="All 4 branches covered.">                if (i &lt; leftMargin || i &gt; peaks.size() - rightMargin) {</span>
+<span class="fc" id="L67">                    distributedPeaks.add(0f);</span>
+                } else {
+<span class="fc" id="L69">                    distributedPeaks.add(distributionFunction(peaks.elementAt(i),</span>
+<span class="fc" id="L70">                            ((float)i/peaks.size())</span>
+                            )
+                            );
+                }
+            }
+            
+<span class="fc" id="L76">            return distributedPeaks;</span>
+        }
+    }
+    
+<span class="fc" id="L80">    public Vector&lt;Peak&gt; peaks = null;</span>
+<span class="fc" id="L81">    public Vector&lt;Float&gt; yValues = new Vector&lt;Float&gt;();</span>
+    // statistical informations
+<span class="fc" id="L83">    private boolean actualAverageValue = false; // su hodnoty aktualne ?</span>
+<span class="fc" id="L84">    private boolean actualMaximumValue = false; // su hodnoty aktualne ?</span>
+<span class="fc" id="L85">    private boolean actualMinimumValue = false; // su hodnoty aktualne ?</span>
+    private float averageValue;
+    private float maximumValue;
+    private float minimumValue;
+    
+    void deActualizeFlags() {
+<span class="fc" id="L91">        this.actualAverageValue = false;</span>
+<span class="fc" id="L92">        this.actualMaximumValue = false;</span>
+<span class="fc" id="L93">        this.actualMinimumValue = false;</span>
+<span class="fc" id="L94">    }</span>
+    
+    // generic
+    // methods for searching bands in image !
+    boolean allowedInterval(Vector&lt;Peak&gt; peaks, int xPosition) {
+<span class="fc bfc" id="L99" title="All 2 branches covered.">        for (Peak peak : peaks)</span>
+<span class="fc bfc" id="L100" title="All 4 branches covered.">            if (peak.left &lt;= xPosition &amp;&amp; xPosition &lt;= peak.right) return false;</span>
+<span class="fc" id="L101">        return true;</span>
+    }
+    public void addPeak(float value) {
+<span class="fc" id="L104">        yValues.add(value);</span>
+<span class="fc" id="L105">        this.deActualizeFlags();</span>
+<span class="fc" id="L106">    }</span>
+    public void applyProbabilityDistributor(Graph.ProbabilityDistributor probability) {
+<span class="fc" id="L108">        this.yValues = probability.distribute(this.yValues);</span>
+<span class="fc" id="L109">        this.deActualizeFlags();</span>
+<span class="fc" id="L110">    }</span>
+    public void negate() {
+<span class="nc" id="L112">        float max = this.getMaxValue();</span>
+<span class="nc bnc" id="L113" title="All 2 branches missed.">        for (int i=0; i&lt;this.yValues.size(); i++)</span>
+<span class="nc" id="L114">            this.yValues.setElementAt(max - this.yValues.elementAt(i),i);</span>
+
+<span class="nc" id="L116">        this.deActualizeFlags();</span>
+<span class="nc" id="L117">    }</span>
+    
+//    public class PeakComparer implements Comparator {
+//        int sortBy; // 0 = podla sirky, 1 = podla velkosti, 2 = z lava do prava
+//        Vector&lt;Float&gt; yValues = null;
+//        
+//        public PeakComparer(Vector&lt;Float&gt; yValues, int sortBy) {
+//            this.yValues = yValues;
+//            this.sortBy = sortBy;
+//        }
+//        
+//        private float getPeakValue(Object peak) {
+//            if (this.sortBy == 0) {
+//                return ((Peak)peak).diff();
+//            } else if (this.sortBy == 1) {
+//                return this.yValues.elementAt( ((Peak)peak).center()  );
+//            } else if (this.sortBy == 2) {
+//                return ((Peak)peak).center();
+//            }
+//            return 0;
+//        }
+//        
+//        public int compare(Object peak1, Object peak2) { // Peak
+//            double comparison = this.getPeakValue(peak2) - this.getPeakValue(peak1);
+//            if (comparison &lt; 0) return -1;
+//            if (comparison &gt; 0) return 1;
+//            return 0;
+//        }
+//    }
+    
+//    float getAverageValue() {
+//        if (!this.actualAverageValue) {
+//            float sum = 0.0f;
+//            for (Float peak : this.yValues) sum += peak;
+//            this.averageValue = sum/this.yValues.size();
+//            this.actualAverageValue = true;
+//        }
+//        return this.averageValue;
+//    }
+//    
+    
+    float getAverageValue() {
+<span class="pc bpc" id="L159" title="1 of 2 branches missed.">        if (!this.actualAverageValue) {</span>
+<span class="fc" id="L160">            this.averageValue = getAverageValue(0,this.yValues.size());</span>
+<span class="fc" id="L161">            this.actualAverageValue = true;</span>
+        }
+<span class="fc" id="L163">        return this.averageValue;</span>
+    }
+    
+    float getAverageValue(int a, int b) {
+<span class="fc" id="L167">        float sum = 0.0f;</span>
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        for (int i=a; i&lt;b; i++) sum+= this.yValues.elementAt(i).doubleValue();</span>
+<span class="fc" id="L169">        return sum/this.yValues.size();</span>
+    }
+    
+
+//    float getMaxValue() {
+//        if (!this.actualMaximumValue) {
+//            float maxValue = 0.0f;
+//            for (int i=0; i&lt;yValues.size(); i++)
+//                maxValue = Math.max(maxValue, yValues.elementAt(i));
+//            this.maximumValue = maxValue;
+//            this.actualMaximumValue = true;
+//        }
+//        return this.maximumValue;
+//    }
+
+    float getMaxValue() {
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        if (!this.actualMaximumValue) {</span>
+<span class="fc" id="L186">            this.maximumValue = this.getMaxValue(0, this.yValues.size());</span>
+<span class="fc" id="L187">            this.actualMaximumValue = true;</span>
+        }
+<span class="fc" id="L189">        return this.maximumValue;</span>
+    }    
+    float getMaxValue(int a, int b) {    
+<span class="fc" id="L192">        float maxValue = 0.0f;</span>
+<span class="fc bfc" id="L193" title="All 2 branches covered.">        for (int i=a; i&lt;b; i++)</span>
+<span class="fc" id="L194">            maxValue = Math.max(maxValue, yValues.elementAt(i));</span>
+<span class="fc" id="L195">        return maxValue;    </span>
+    }
+    float getMaxValue(float a, float b) {
+<span class="nc" id="L198">        int ia = (int)(a*yValues.size());</span>
+<span class="nc" id="L199">        int ib = (int)(b*yValues.size());</span>
+<span class="nc" id="L200">        return getMaxValue(ia, ib);</span>
+    }
+
+    int getMaxValueIndex(int a, int b) {    
+<span class="nc" id="L204">        float maxValue = 0.0f;</span>
+<span class="nc" id="L205">        int maxIndex = a;</span>
+<span class="nc bnc" id="L206" title="All 2 branches missed.">        for (int i=a; i&lt;b; i++) {</span>
+<span class="nc bnc" id="L207" title="All 2 branches missed.">            if (yValues.elementAt(i) &gt;= maxValue) {</span>
+<span class="nc" id="L208">                maxValue = yValues.elementAt(i);</span>
+<span class="nc" id="L209">                maxIndex = i;</span>
+            }
+        }
+<span class="nc" id="L212">        return maxIndex;    </span>
+    }    
+    
+//    float getMinValue() {
+//        if (!this.actualMinimumValue) {
+//            float minValue = Float.POSITIVE_INFINITY;
+//            for (int i=0; i&lt;yValues.size(); i++)
+//                minValue = Math.min(minValue, yValues.elementAt(i));
+//            
+//            this.minimumValue = minValue;
+//            this.actualMinimumValue = true;
+//        }
+//        return this.minimumValue;
+//    }
+
+    float getMinValue() {
+<span class="fc bfc" id="L228" title="All 2 branches covered.">        if (!this.actualMinimumValue) {</span>
+<span class="fc" id="L229">            this.minimumValue = this.getMinValue(0, this.yValues.size());</span>
+<span class="fc" id="L230">            this.actualMinimumValue = true;</span>
+        }
+<span class="fc" id="L232">        return this.minimumValue;</span>
+    }    
+    float getMinValue(int a, int b) {    
+<span class="fc" id="L235">        float minValue = Float.POSITIVE_INFINITY;</span>
+<span class="fc bfc" id="L236" title="All 2 branches covered.">        for (int i=a; i&lt;b; i++)</span>
+<span class="fc" id="L237">            minValue = Math.min(minValue, yValues.elementAt(i));</span>
+<span class="fc" id="L238">        return minValue;    </span>
+    }    
+    float getMinValue(float a, float b) {
+<span class="nc" id="L241">        int ia = (int)(a*yValues.size());</span>
+<span class="nc" id="L242">        int ib = (int)(b*yValues.size());</span>
+<span class="nc" id="L243">        return getMinValue(ia, ib);</span>
+    }
+    
+    
+    int getMinValueIndex(int a, int b) {    
+<span class="fc" id="L248">        float minValue = Float.POSITIVE_INFINITY;</span>
+<span class="fc" id="L249">        int minIndex = b;</span>
+<span class="fc bfc" id="L250" title="All 2 branches covered.">        for (int i=a; i&lt;b; i++) {</span>
+<span class="fc bfc" id="L251" title="All 2 branches covered.">            if (yValues.elementAt(i) &lt;= minValue) {</span>
+<span class="fc" id="L252">                minValue = yValues.elementAt(i);</span>
+<span class="fc" id="L253">                minIndex = i;</span>
+            }
+        }
+<span class="fc" id="L256">        return minIndex;    </span>
+    }        
+//    
+    
+    public BufferedImage renderHorizontally(int width, int height) {
+<span class="nc" id="L261">        BufferedImage content = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L262">        BufferedImage axis = new BufferedImage(width+40, height+40, BufferedImage.TYPE_INT_RGB);</span>
+        
+<span class="nc" id="L264">        Graphics2D graphicContent = content.createGraphics();</span>
+<span class="nc" id="L265">        Graphics2D graphicAxis = axis.createGraphics();</span>
+        
+<span class="nc" id="L267">        Rectangle backRect = new Rectangle(0,0,width+40,height+40);</span>
+<span class="nc" id="L268">        graphicAxis.setColor(Color.LIGHT_GRAY);</span>
+<span class="nc" id="L269">        graphicAxis.fill(backRect);</span>
+<span class="nc" id="L270">        graphicAxis.draw(backRect);</span>
+<span class="nc" id="L271">        backRect = new Rectangle(0,0,width,height);</span>
+<span class="nc" id="L272">        graphicContent.setColor(Color.WHITE);</span>
+<span class="nc" id="L273">        graphicContent.fill(backRect);</span>
+<span class="nc" id="L274">        graphicContent.draw(backRect);</span>
+        
+        
+        int x,y,x0,y0;
+<span class="nc" id="L278">        x=0;y=0;</span>
+
+<span class="nc" id="L280">        graphicContent.setColor(Color.GREEN);</span>
+        
+<span class="nc bnc" id="L282" title="All 2 branches missed.">        for (int i=0; i&lt;this.yValues.size(); i++) {</span>
+<span class="nc" id="L283">            x0=x; y0=y;</span>
+<span class="nc" id="L284">            x = (int) ( ( (float)i / this.yValues.size() ) * width );</span>
+<span class="nc" id="L285">            y = (int) ( ( (float) 1 - (this.yValues.elementAt(i) / this.getMaxValue())) * height );</span>
+<span class="nc" id="L286">            graphicContent.drawLine(x0,y0,x,y);</span>
+        }
+        
+<span class="nc bnc" id="L289" title="All 2 branches missed.">        if (this.peaks!=null) { // uz boli vyhladane aj peaky, renderujeme aj tie</span>
+<span class="nc" id="L290">            graphicContent.setColor(Color.RED);</span>
+<span class="nc" id="L291">            int i = 0;</span>
+<span class="nc" id="L292">            double multConst = (double)width / this.yValues.size();</span>
+<span class="nc bnc" id="L293" title="All 2 branches missed.">            for (Peak p : this.peaks) {</span>
+<span class="nc" id="L294">                graphicContent.drawLine((int)(p.left * multConst),  0,  (int)(p.center * multConst),30);</span>
+<span class="nc" id="L295">                graphicContent.drawLine((int)(p.center * multConst), 30,  (int)(p.right * multConst),0);</span>
+<span class="nc" id="L296">                graphicContent.drawString((i++)+&quot;.&quot; ,(int)(p.center * multConst) -5, 42);</span>
+<span class="nc" id="L297">            }</span>
+        }
+        
+<span class="nc" id="L300">        graphicAxis.drawImage(content,35,5,null);</span>
+        
+<span class="nc" id="L302">        graphicAxis.setColor(Color.BLACK);</span>
+<span class="nc" id="L303">        graphicAxis.drawRect(35,5,content.getWidth(), content.getHeight());</span>
+        
+<span class="nc bnc" id="L305" title="All 2 branches missed.">        for (int ax = 0; ax &lt; content.getWidth(); ax += 50) {</span>
+<span class="nc" id="L306">            graphicAxis.drawString(Integer.toString(ax) , ax + 35, axis.getHeight()-10);</span>
+<span class="nc" id="L307">            graphicAxis.drawLine(ax+35, content.getHeight()+5 ,ax+35, content.getHeight()+15);</span>
+        }
+        
+<span class="nc bnc" id="L310" title="All 2 branches missed.">        for (int ay = 0; ay &lt; content.getHeight(); ay += 20) {</span>
+<span class="nc" id="L311">            graphicAxis.drawString(</span>
+<span class="nc" id="L312">                    Integer.toString(new Float((1-(float)ay/content.getHeight())*100).intValue()) + &quot;%&quot;</span>
+                    , 1 ,ay + 15);
+<span class="nc" id="L314">            graphicAxis.drawLine(25,ay+5,35,ay+5);</span>
+        }        
+<span class="nc" id="L316">        graphicContent.dispose();</span>
+<span class="nc" id="L317">        graphicAxis.dispose();</span>
+<span class="nc" id="L318">        return axis;</span>
+    }
+    
+    public BufferedImage renderVertically(int width, int height) {
+<span class="nc" id="L322">        BufferedImage content = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L323">        BufferedImage axis = new BufferedImage(width+10, height+40, BufferedImage.TYPE_INT_RGB);</span>
+        
+<span class="nc" id="L325">        Graphics2D graphicContent = content.createGraphics();</span>
+<span class="nc" id="L326">        Graphics2D graphicAxis = axis.createGraphics();</span>
+        
+<span class="nc" id="L328">        Rectangle backRect = new Rectangle(0,0,width+40,height+40);</span>
+<span class="nc" id="L329">        graphicAxis.setColor(Color.LIGHT_GRAY);</span>
+<span class="nc" id="L330">        graphicAxis.fill(backRect);</span>
+<span class="nc" id="L331">        graphicAxis.draw(backRect);</span>
+<span class="nc" id="L332">        backRect = new Rectangle(0,0,width,height);</span>
+<span class="nc" id="L333">        graphicContent.setColor(Color.WHITE);</span>
+<span class="nc" id="L334">        graphicContent.fill(backRect);</span>
+<span class="nc" id="L335">        graphicContent.draw(backRect);</span>
+        
+        
+        int x,y,x0,y0;
+<span class="nc" id="L339">        x=width;y=0;</span>
+
+<span class="nc" id="L341">        graphicContent.setColor(Color.GREEN);</span>
+        
+<span class="nc bnc" id="L343" title="All 2 branches missed.">        for (int i=0; i&lt;this.yValues.size(); i++) {</span>
+<span class="nc" id="L344">            x0=x; y0=y;</span>
+<span class="nc" id="L345">            y = (int) ( ( (float)i / this.yValues.size() ) * height );</span>
+<span class="nc" id="L346">            x = (int) ( ( (float)  (this.yValues.elementAt(i) / this.getMaxValue())) * width );</span>
+<span class="nc" id="L347">            graphicContent.drawLine(x0,y0,x,y);</span>
+        }
+        
+<span class="nc bnc" id="L350" title="All 2 branches missed.">        if (this.peaks!=null) { // uz boli vyhladane aj peaky, renderujeme aj tie</span>
+<span class="nc" id="L351">            graphicContent.setColor(Color.RED);</span>
+<span class="nc" id="L352">            int i = 0;</span>
+<span class="nc" id="L353">            double multConst = (double)height / this.yValues.size();</span>
+<span class="nc bnc" id="L354" title="All 2 branches missed.">            for (Peak p : this.peaks) {</span>
+<span class="nc" id="L355">                graphicContent.drawLine(width,(int)(p.left * multConst),  width-30,  (int)(p.center * multConst));</span>
+<span class="nc" id="L356">                graphicContent.drawLine(width-30, (int)(p.center * multConst), width, (int)(p.right * multConst));</span>
+<span class="nc" id="L357">                graphicContent.drawString((i++)+&quot;.&quot; ,width-38, (int)(p.center * multConst)+5);</span>
+<span class="nc" id="L358">            }</span>
+        }
+        
+<span class="nc" id="L361">        graphicAxis.drawImage(content,5,5,null);</span>
+        
+<span class="nc" id="L363">        graphicAxis.setColor(Color.BLACK);</span>
+<span class="nc" id="L364">        graphicAxis.drawRect(5,5,content.getWidth(), content.getHeight());</span>
+        
+//        for (int ax = 0; ax &lt; content.getWidth(); ax += 50) {
+//            graphicAxis.drawString(new Integer(ax).toString() , ax + 35, axis.getHeight()-10);
+//            graphicAxis.drawLine(ax+35, content.getHeight()+5 ,ax+35, content.getHeight()+15);
+//        }
+//        
+//        for (int ay = 0; ay &lt; content.getHeight(); ay += 20) {
+//            graphicAxis.drawString(
+//                    new Integer(new Float((1-(float)ay/content.getHeight())*100).intValue()).toString() + &quot;%&quot;
+//                    , 1 ,ay + 15);
+//            graphicAxis.drawLine(25,ay+5,35,ay+5);
+//        }        
+<span class="nc" id="L377">        graphicContent.dispose();</span>
+<span class="nc" id="L378">        graphicAxis.dispose();</span>
+<span class="nc" id="L379">        return axis;</span>
+    }
+    
+    
+    public void rankFilter(int size) {
+<span class="fc" id="L384">        int halfSize = size/2;</span>
+        //Vector&lt;Float&gt; clone = (Vector&lt;Float&gt;)this.yValues.clone();
+<span class="fc" id="L386">        Vector&lt;Float&gt; clone = new Vector&lt;Float&gt;(this.yValues);</span>
+        
+<span class="fc bfc" id="L388" title="All 2 branches covered.">        for (int i=halfSize; i &lt; this.yValues.size() - halfSize;  i++) {</span>
+<span class="fc" id="L389">            float sum = 0;</span>
+<span class="fc bfc" id="L390" title="All 2 branches covered.">            for (int ii = i - halfSize; ii&lt;i+halfSize; ii++) {</span>
+<span class="fc" id="L391">                sum+=clone.elementAt(ii);</span>
+            }
+<span class="fc" id="L393">            this.yValues.setElementAt(sum / size, i);</span>
+        }
+        
+<span class="fc" id="L396">    }</span>
+    
+    public int indexOfLeftPeakRel(int peak, double peakFootConstantRel) {
+<span class="fc" id="L399">        int index=peak;</span>
+<span class="fc bfc" id="L400" title="All 2 branches covered.">        for (int i=peak; i&gt;=0; i--) {</span>
+<span class="fc" id="L401">            index = i;</span>
+<span class="fc bfc" id="L402" title="All 2 branches covered.">            if (yValues.elementAt(index) &lt; peakFootConstantRel*yValues.elementAt(peak) ) break;</span>
+        }
+<span class="fc" id="L404">        return Math.max(0,index);</span>
+    }
+    public int indexOfRightPeakRel(int peak, double peakFootConstantRel) {
+<span class="fc" id="L407">        int index=peak;</span>
+<span class="fc bfc" id="L408" title="All 2 branches covered.">        for (int i=peak; i&lt;yValues.size(); i++) {</span>
+<span class="fc" id="L409">            index = i;</span>
+<span class="fc bfc" id="L410" title="All 2 branches covered.">            if (yValues.elementAt(index) &lt; peakFootConstantRel*yValues.elementAt(peak) ) break;</span>
+        }
+<span class="fc" id="L412">        return Math.min(yValues.size(), index);</span>
+    }
+
+    
+    public float averagePeakDiff(Vector&lt;Peak&gt; peaks) { // not used
+<span class="nc" id="L417">        float sum = 0;</span>
+<span class="nc bnc" id="L418" title="All 2 branches missed.">        for (Peak p : peaks)</span>
+<span class="nc" id="L419">            sum+= p.getDiff();</span>
+<span class="nc" id="L420">        return sum/peaks.size();</span>
+    }
+    public float maximumPeakDiff(Vector&lt;Peak&gt; peaks, int from, int to) { 
+<span class="nc" id="L423">        float max = 0;</span>
+<span class="nc bnc" id="L424" title="All 2 branches missed.">        for (int i=from; i&lt;=to; i++)</span>
+<span class="nc" id="L425">            max = Math.max(max,peaks.elementAt(i).getDiff());</span>
+<span class="nc" id="L426">        return max;</span>
+    }
+    
+    
+}
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

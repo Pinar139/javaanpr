@@ -1,0 +1,206 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Main.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr</a> &gt; <span class="el_source">Main.java</span></div><h1>Main.java</h1><pre class="source lang-java linenums">
+package javaanpr;
+import javaanpr.gui.ReportGenerator;
+import javaanpr.recognizer.NeuralPatternClassificator;
+import java.io.File;
+import java.io.IOException;
+import javax.swing.UIManager;
+import javaanpr.configurator.Configurator;
+import javaanpr.gui.windows.FrameComponentInit;
+import javaanpr.gui.windows.FrameMain;
+import javaanpr.imageanalysis.CarSnapshot;
+import javaanpr.imageanalysis.Char;
+import javaanpr.intelligence.Intelligence;
+
+
+<span class="nc" id="L16">public class Main {</span>
+<span class="fc" id="L17">    public static ReportGenerator rg = new ReportGenerator();</span>
+    public static Intelligence systemLogic;
+<span class="fc" id="L19">    public static String helpText = &quot;&quot; +</span>
+            &quot;-----------------------------------------------------------\n&quot;+
+            &quot;Automatic number plate recognition system\n&quot;+
+            &quot;Copyright (c) P�nar, 2016-2017\n&quot;+
+            &quot;\n&quot;+
+            &quot;Licensed under the Educational Community License,\n&quot;+
+            &quot;\n&quot;+
+            &quot;Usage : java -jar anpr.jar [-options]\n&quot;+
+            &quot;\n&quot;+
+            &quot;Where options include:\n&quot;+
+            &quot;\n&quot;+
+            &quot;    -help         Displays this help\n&quot;+
+            &quot;    -gui          Run GUI viewer (default choice)\n&quot;+
+            &quot;    -recognize -i &lt;snapshot&gt;\n&quot; +
+            &quot;                  Recognize single snapshot\n&quot; +
+            &quot;    -recognize -i &lt;snapshot&gt; -o &lt;dstdir&gt;\n&quot;+
+            &quot;                  Recognize single snapshot and\n&quot;+
+            &quot;                  save report html into specified\n&quot;+
+            &quot;                  directory\n&quot;+
+            &quot;    -newconfig -o &lt;file&gt;\n&quot;+
+            &quot;                  Generate default configuration file\n&quot;+
+            &quot;    -newnetwork -o &lt;file&gt;\n&quot;+
+            &quot;                  Train neural network according to\n&quot;+
+            &quot;                  specified feature extraction method and\n&quot;+
+            &quot;                  learning parameters (in config. file)\n&quot;+
+            &quot;                  and saves it into output file\n&quot;+
+            &quot;    -newalphabet -i &lt;srcdir&gt; -o &lt;dstdir&gt;\n&quot;+
+            &quot;                  Normalize all images in &lt;srcdir&gt; and save\n&quot;+
+            &quot;                  it to &lt;dstdir&gt;.&quot;;
+    
+    
+    
+    public static void newAlphabet(String srcdir, String dstdir) throws Exception { 
+<span class="nc" id="L52">        File folder = new File(srcdir);</span>
+        
+<span class="nc bnc" id="L54" title="All 2 branches missed.">        if (!folder.exists()) throw new IOException(&quot;Source folder doesn't exists&quot;);</span>
+        
+<span class="nc bnc" id="L56" title="All 2 branches missed.">        if (!new File(dstdir).exists()) throw new IOException(&quot;Destination folder doesn't exists&quot;);</span>
+        
+<span class="nc" id="L58">        int x = Intelligence.configurator.getIntProperty(&quot;char_normalizeddimensions_x&quot;);</span>
+        
+<span class="nc" id="L60">        int y = Intelligence.configurator.getIntProperty(&quot;char_normalizeddimensions_y&quot;);</span>
+        
+<span class="nc" id="L62">        System.out.println(&quot;\nCreating new alphabet (&quot;+x+&quot; x &quot;+y+&quot; px)... \n&quot;);</span>
+        
+<span class="nc bnc" id="L64" title="All 2 branches missed.">        for (String fileName : folder.list()) {</span>
+            
+<span class="nc" id="L66">            Char c = new Char(srcdir+File.separator+fileName);</span>
+            
+<span class="nc" id="L68">            c.normalize();</span>
+            
+<span class="nc" id="L70">            c.saveImage(dstdir+File.separator+fileName);</span>
+            
+<span class="nc" id="L72">            System.out.println(fileName+&quot; done&quot;);</span>
+        }
+<span class="nc" id="L74">    }</span>
+    
+   
+    public static void learnAlphabet(String destinationFile) throws Exception {
+        try {
+            
+<span class="nc" id="L80">            File f = new File(destinationFile);</span>
+            
+<span class="nc" id="L82">            f.createNewFile();</span>
+            } 
+        
+<span class="nc" id="L85">        catch (Exception e)</span>
+        {
+            
+<span class="nc" id="L88">            throw new IOException(&quot;Can't find the path specified&quot;);</span>
+<span class="nc" id="L89">        }</span>
+        
+<span class="nc" id="L91">        System.out.println();</span>
+        
+<span class="nc" id="L93">        NeuralPatternClassificator npc = new NeuralPatternClassificator(true);</span>
+        
+<span class="nc" id="L95">        npc.network.saveToXml(destinationFile);</span>
+<span class="nc" id="L96">    }</span>
+    
+    public static void main(String[] args) throws Exception {
+        
+<span class="pc bpc" id="L100" title="5 of 6 branches missed.">        if (args.length==0 || (args.length==1 &amp;&amp; args[0].equals(&quot;-gui&quot;))) {</span>
+            
+<span class="fc" id="L102">            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());</span>
+            
+<span class="fc" id="L104">            FrameComponentInit frameComponentInit = new FrameComponentInit();</span>
+            
+<span class="fc" id="L106">            Main.systemLogic = new Intelligence(false);</span>
+            
+<span class="fc" id="L108">            frameComponentInit.dispose(); </span>
+            
+<span class="fc" id="L110">            FrameMain mainFrame = new FrameMain();</span>
+<span class="fc" id="L111">        } </span>
+<span class="nc bnc" id="L112" title="All 2 branches missed.">        else if (args.length==3 &amp;&amp;</span>
+                
+<span class="nc bnc" id="L114" title="All 2 branches missed.">                args[0].equals(&quot;-recognize&quot;) &amp;&amp;</span>
+                
+<span class="nc bnc" id="L116" title="All 2 branches missed.">                args[1].equals(&quot;-i&quot;)</span>
+                
+                ) {
+            
+            try {
+                
+<span class="nc" id="L122">                Main.systemLogic = new Intelligence(false);</span>
+                
+<span class="nc" id="L124">                System.out.println(systemLogic.recognize(new CarSnapshot(args[2])));</span>
+            }
+<span class="nc" id="L126">            catch (IOException e) </span>
+            {
+<span class="nc" id="L128">                System.out.println(e.getMessage());</span>
+<span class="nc" id="L129">            }</span>
+           } 
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        else if (args.length==5 &amp;&amp;</span>
+                
+<span class="nc bnc" id="L133" title="All 2 branches missed.">                args[0].equals(&quot;-recognize&quot;) &amp;&amp;</span>
+                
+<span class="nc bnc" id="L135" title="All 2 branches missed.">                args[1].equals(&quot;-i&quot;) &amp;&amp;</span>
+                
+<span class="nc bnc" id="L137" title="All 2 branches missed.">                args[3].equals(&quot;-o&quot;)</span>
+                ) {
+           
+            try {
+<span class="nc" id="L141">                Main.rg = new ReportGenerator(args[4]);</span>
+                
+<span class="nc" id="L143">                Main.systemLogic = new Intelligence(true); </span>
+                
+<span class="nc" id="L145">                Main.systemLogic.recognize(new CarSnapshot(args[2]));</span>
+                
+<span class="nc" id="L147">                Main.rg.finish();</span>
+                } 
+<span class="nc" id="L149">            catch (IOException e) </span>
+            {
+<span class="nc" id="L151">                System.out.println(e.getMessage());</span>
+<span class="nc" id="L152">            }</span>
+            
+        } 
+<span class="nc bnc" id="L155" title="All 2 branches missed.">        else if (args.length==3 &amp;&amp;</span>
+                
+<span class="nc bnc" id="L157" title="All 2 branches missed.">                args[0].equals(&quot;-newconfig&quot;) &amp;&amp;</span>
+                
+<span class="nc bnc" id="L159" title="All 2 branches missed.">                args[1].equals(&quot;-o&quot;)</span>
+                ) {
+            
+<span class="nc" id="L162">            Configurator configurator = new Configurator();</span>
+            
+            try {
+                
+<span class="nc" id="L166">                configurator.saveConfiguration(args[2]);</span>
+                } 
+<span class="nc" id="L168">            catch (IOException e) </span>
+            {
+<span class="nc" id="L170">                System.out.println(e.getMessage());</span>
+<span class="nc" id="L171">            }</span>
+<span class="nc bnc" id="L172" title="All 2 branches missed.">        } else if (args.length==3 &amp;&amp;</span>
+<span class="nc bnc" id="L173" title="All 2 branches missed.">                args[0].equals(&quot;-newnetwork&quot;) &amp;&amp;</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                args[1].equals(&quot;-o&quot;)</span>
+                ) {
+            
+            try 
+            {
+<span class="nc" id="L179">                 learnAlphabet(args[2]);</span>
+            } 
+<span class="nc" id="L181">                catch (Exception e) {</span>
+<span class="nc" id="L182">                System.out.println(e.getMessage());</span>
+<span class="nc" id="L183">            }</span>
+        } 
+<span class="nc bnc" id="L185" title="All 2 branches missed.">          else if (args.length==5 &amp;&amp;</span>
+<span class="nc bnc" id="L186" title="All 2 branches missed.">                args[0].equals(&quot;-newalphabet&quot;) &amp;&amp;</span>
+<span class="nc bnc" id="L187" title="All 2 branches missed.">                args[1].equals(&quot;-i&quot;) &amp;&amp;</span>
+<span class="nc bnc" id="L188" title="All 2 branches missed.">                args[3].equals(&quot;-o&quot;)</span>
+                ) {
+         
+            try {
+<span class="nc" id="L192">                newAlphabet(args[2],args[4]);</span>
+           
+                } 
+<span class="nc" id="L195">            catch (Exception e) {</span>
+<span class="nc" id="L196">                System.out.println(e.getMessage());</span>
+<span class="nc" id="L197">            }</span>
+            }
+        else 
+        {
+          
+<span class="nc" id="L202">            System.out.println(helpText);</span>
+        }
+<span class="fc" id="L204">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

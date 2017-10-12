@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Statistics.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">Statistics.java</span></div><h1>Statistics.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.image.BufferedImage;
+//import javaanpr.imageanalysis.Photo;
+
+public class Statistics {
+    public float maximum;
+    public float minimum;
+    public float average;
+    public float dispersion;
+    
+    Statistics(BufferedImage bi) {
+<span class="nc" id="L14">        this(new Photo(bi));</span>
+<span class="nc" id="L15">    }</span>
+    
+<span class="fc" id="L17">    Statistics(Photo photo) {</span>
+<span class="fc" id="L18">        float sum = 0;</span>
+<span class="fc" id="L19">        float sum2 = 0;</span>
+<span class="fc" id="L20">        int w = photo.getWidth();</span>
+<span class="fc" id="L21">        int h = photo.getHeight();</span>
+        
+<span class="fc bfc" id="L23" title="All 2 branches covered.">        for (int x=0; x &lt; w;x++) {</span>
+<span class="fc bfc" id="L24" title="All 2 branches covered.">            for (int y=0; y &lt; h;y++) {</span>
+<span class="fc" id="L25">                float pixelValue = photo.getBrightness(x,y);</span>
+<span class="fc" id="L26">                this.maximum = Math.max(pixelValue, this.maximum);</span>
+<span class="fc" id="L27">                this.minimum = Math.min(pixelValue, this.minimum);</span>
+<span class="fc" id="L28">                sum += pixelValue;</span>
+<span class="fc" id="L29">                sum2 += (pixelValue * pixelValue);</span>
+            }
+        }
+<span class="fc" id="L32">        int count = (w * h);</span>
+<span class="fc" id="L33">        this.average = sum / count;</span>
+        // rozptyl = priemer stvorcov + stvorec priemeru
+<span class="fc" id="L35">        this.dispersion = ( sum2 / count ) - ( this.average * this.average);</span>
+<span class="fc" id="L36">    }</span>
+    
+    public float thresholdBrightness(float value, float coef) {
+        float out;
+<span class="fc bfc" id="L40" title="All 2 branches covered.">        if (value &gt; this.average)</span>
+<span class="fc" id="L41">            out = coef + (1 - coef) * (value - this.average) / (this.maximum - this.average);</span>
+        else
+<span class="fc" id="L43">            out =  (1 - coef) * (value - this.minimum) / (this.average - this.minimum);</span>
+<span class="fc" id="L44">        return out;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>Char.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">Char.java</span></div><h1>Char.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.image.BufferedImage;
+//import java.awt.image.ConvolveOp;
+//import java.awt.image.Kernel;
+import java.io.IOException;
+import java.util.Vector;
+//import org.omg.CORBA.TIMEOUT;
+import javaanpr.intelligence.Intelligence;
+import javaanpr.recognizer.CharacterRecognizer;
+
+
+public class Char extends Photo {
+    
+<span class="pc" id="L16">    public boolean normalized = false;</span>
+<span class="pc" id="L17">    public PositionInPlate positionInPlate = null;</span>
+    
+    //private PixelMap pixelMap;
+<span class="pc" id="L20">    private PixelMap.Piece bestPiece = null;</span>
+    
+    public int fullWidth, fullHeight, pieceWidth, pieceHeight;
+    
+    public float statisticAverageBrightness;
+    public float statisticMinimumBrightness;
+    public float statisticMaximumBrightness;
+    public float statisticContrast;
+    public float statisticAverageHue;
+    public float statisticAverageSaturation;
+    
+    public BufferedImage thresholdedImage;
+    
+<span class="nc" id="L33">    public Char() {</span>
+<span class="nc" id="L34">        image = null;</span>
+<span class="nc" id="L35">        init();</span>
+<span class="nc" id="L36">    }</span>
+    public Char(BufferedImage bi, BufferedImage thresholdedImage, PositionInPlate positionInPlate) {
+<span class="fc" id="L38">        super(bi);</span>
+<span class="fc" id="L39">        this.thresholdedImage = thresholdedImage;</span>
+<span class="fc" id="L40">        this.positionInPlate = positionInPlate;</span>
+<span class="fc" id="L41">        init();</span>
+<span class="fc" id="L42">    }</span>
+    public Char(BufferedImage bi) {
+<span class="nc" id="L44">        this(bi,bi,null);</span>
+<span class="nc" id="L45">        init();</span>
+<span class="nc" id="L46">    }</span>
+    // nacita znak zo suboru a hned vykona aj thresholding
+    // prahovanie(thresholding) sa vacsinou u znakov nerobi, pretoze znaky sa vysekavaju
+    // zo znacky, ktora uz je sama o sebe prahovana, ale nacitavanie zo suboru tomuto
+    // principu nezodpoveda, cize spravime prahovanie zvlast :
+    public Char(String filepath) throws IOException { 
+<span class="fc" id="L52">        super(filepath);</span>
+        // this.thresholdedImage = this.image; povodny kod, zakomentovany dna 23.12.2006 2:33 AM
+        
+        // nasledovne 4 riadky pridane 23.12.2006 2:33 AM
+<span class="fc" id="L56">        BufferedImage origin = Photo.duplicateBufferedImage(this.image);</span>
+<span class="fc" id="L57">        this.adaptiveThresholding(); // s ucinnostou nad this.image</span>
+<span class="fc" id="L58">        this.thresholdedImage = this.image;</span>
+<span class="fc" id="L59">        this.image = origin;</span>
+        
+<span class="fc" id="L61">        init();</span>
+<span class="fc" id="L62">    }</span>
+    
+    public Char clone() {
+<span class="nc" id="L65">        return new Char(Char.duplicateBufferedImage(this.image),</span>
+<span class="nc" id="L66">                Char.duplicateBufferedImage(this.thresholdedImage),</span>
+                this.positionInPlate);
+    }
+    
+    private void init() {
+<span class="fc" id="L71">        this.fullWidth = super.getWidth();</span>
+<span class="fc" id="L72">        this.fullHeight = super.getHeight();</span>
+<span class="fc" id="L73">    }</span>
+    
+    public void normalize() {
+        
+<span class="pc bpc" id="L77" title="1 of 2 branches missed.">        if (normalized) return;</span>
+        
+<span class="fc" id="L79">        BufferedImage colorImage = Char.duplicateBufferedImage(this.getBi());</span>
+<span class="fc" id="L80">        this.image = this.thresholdedImage;</span>
+        
+/*      NEBUDEME POUZIVAT // tu treba osetrit pripady, ked je prvy alebo posledny riadok cely cierny (zmenime na biely)
+        boolean flag = false;
+        for (int x=0; x&lt;this.getWidth(); x++) if (this.getBrightness(x,0) &gt; 0.5f) flag = true;
+        if (flag == false) for (int x=0; x&lt;this.getWidth(); x++) this.setBrightness(x,0,1.0f);  */
+<span class="fc" id="L86">        PixelMap pixelMap = this.getPixelMap();</span>
+        
+<span class="fc" id="L88">        this.bestPiece = pixelMap.getBestPiece();</span>
+        
+<span class="fc" id="L90">        colorImage = getBestPieceInFullColor(colorImage, this.bestPiece);</span>
+        
+        // vypocet statistik
+<span class="fc" id="L93">        this.computeStatisticBrightness(colorImage);</span>
+<span class="fc" id="L94">        this.computeStatisticContrast(colorImage);</span>
+<span class="fc" id="L95">        this.computeStatisticHue(colorImage);</span>
+<span class="fc" id="L96">        this.computeStatisticSaturation(colorImage);</span>
+        
+<span class="fc" id="L98">        this.image = this.bestPiece.render();</span>
+        
+<span class="fc bfc" id="L100" title="All 2 branches covered.">        if (this.image == null) this.image = new BufferedImage(1,1, BufferedImage.TYPE_INT_RGB);</span>
+        
+<span class="fc" id="L102">        this.pieceWidth = super.getWidth();</span>
+<span class="fc" id="L103">        this.pieceHeight = super.getHeight();</span>
+        
+<span class="fc" id="L105">        this.normalizeResizeOnly();</span>
+<span class="fc" id="L106">        normalized=true;</span>
+<span class="fc" id="L107">    }</span>
+    
+    private BufferedImage getBestPieceInFullColor(BufferedImage bi, PixelMap.Piece piece) {
+<span class="pc bpc" id="L110" title="1 of 4 branches missed.">        if (piece.width &lt;=0 || piece.height &lt;=0) return bi;</span>
+<span class="fc" id="L111">        return bi.getSubimage(</span>
+                piece.mostLeftPoint,
+                piece.mostTopPoint,
+                piece.width,
+                piece.height);
+    }
+    
+    private void normalizeResizeOnly() { // vracia ten isty Char, nie novy
+        
+<span class="fc" id="L120">        int x = Intelligence.configurator.getIntProperty(&quot;char_normalizeddimensions_x&quot;);</span>
+<span class="fc" id="L121">        int y = Intelligence.configurator.getIntProperty(&quot;char_normalizeddimensions_y&quot;);</span>
+<span class="pc bpc" id="L122" title="2 of 4 branches missed.">        if (x==0 || y==0) return;// nebude resize</span>
+        //this.linearResize(x,y);
+        
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">        if (Intelligence.configurator.getIntProperty(&quot;char_resizeMethod&quot;)==0) {</span>
+<span class="nc" id="L126">            this.linearResize(x,y); // radsej weighted average</span>
+        } else {
+<span class="fc" id="L128">            this.averageResize(x,y);</span>
+        }
+        
+<span class="fc" id="L131">        this.normalizeBrightness(0.5f);</span>
+<span class="fc" id="L132">    }</span>
+    
+    ///////////////////////////////////////////////////////
+    private void computeStatisticContrast(BufferedImage bi) {
+<span class="fc" id="L136">        float sum = 0;</span>
+<span class="fc" id="L137">        int w = bi.getWidth();</span>
+<span class="fc" id="L138">        int h = bi.getHeight();</span>
+<span class="fc bfc" id="L139" title="All 2 branches covered.">        for (int x=0; x &lt; w; x++) {</span>
+<span class="fc bfc" id="L140" title="All 2 branches covered.">            for (int y=0; y &lt; h; y++) {</span>
+<span class="fc" id="L141">                sum += Math.abs(this.statisticAverageBrightness - getBrightness(bi,x,y));</span>
+            }
+        }
+<span class="fc" id="L144">        this.statisticContrast = sum / (w * h);</span>
+<span class="fc" id="L145">    }</span>
+    private void computeStatisticBrightness(BufferedImage bi) {
+<span class="fc" id="L147">        float sum = 0;</span>
+<span class="fc" id="L148">        float min = Float.POSITIVE_INFINITY;</span>
+<span class="fc" id="L149">        float max = Float.NEGATIVE_INFINITY;</span>
+        
+<span class="fc" id="L151">        int w = bi.getWidth();</span>
+<span class="fc" id="L152">        int h = bi.getHeight();</span>
+<span class="fc bfc" id="L153" title="All 2 branches covered.">        for (int x=0; x &lt; w; x++) {</span>
+<span class="fc bfc" id="L154" title="All 2 branches covered.">            for (int y=0; y &lt; h; y++) {</span>
+<span class="fc" id="L155">                float value = getBrightness(bi,x,y);</span>
+<span class="fc" id="L156">                sum += value;</span>
+<span class="fc" id="L157">                min = Math.min(min, value);</span>
+<span class="fc" id="L158">                max = Math.max(max, value);</span>
+            }
+        }
+<span class="fc" id="L161">        this.statisticAverageBrightness = sum / (w * h);</span>
+<span class="fc" id="L162">        this.statisticMinimumBrightness = min;</span>
+<span class="fc" id="L163">        this.statisticMaximumBrightness = max;</span>
+<span class="fc" id="L164">    }</span>
+    private void computeStatisticHue(BufferedImage bi) {
+<span class="fc" id="L166">        float sum = 0;</span>
+<span class="fc" id="L167">        int w = bi.getWidth();</span>
+<span class="fc" id="L168">        int h = bi.getHeight();</span>
+<span class="fc bfc" id="L169" title="All 2 branches covered.">        for (int x=0; x &lt; w; x++) {</span>
+<span class="fc bfc" id="L170" title="All 2 branches covered.">            for (int y=0; y &lt; h; y++) {</span>
+<span class="fc" id="L171">                sum += getHue(bi,x,y);</span>
+            }
+        }
+<span class="fc" id="L174">        this.statisticAverageHue = sum / (w * h);</span>
+<span class="fc" id="L175">    }</span>
+    private void computeStatisticSaturation(BufferedImage bi) {
+<span class="fc" id="L177">        float sum = 0;</span>
+<span class="fc" id="L178">        int w = bi.getWidth();</span>
+<span class="fc" id="L179">        int h = bi.getHeight();</span>
+<span class="fc bfc" id="L180" title="All 2 branches covered.">        for (int x=0; x &lt; w; x++) {</span>
+<span class="fc bfc" id="L181" title="All 2 branches covered.">            for (int y=0; y &lt; h; y++) {</span>
+<span class="fc" id="L182">                sum += getSaturation(bi,x,y);</span>
+            }
+        }
+<span class="fc" id="L185">        this.statisticAverageSaturation = sum / (w * h);</span>
+<span class="fc" id="L186">    }</span>
+    
+    public PixelMap getPixelMap() {
+<span class="fc" id="L189">        return new PixelMap(this);</span>
+    }
+    
+    ////////
+    
+    public Vector&lt;Double&gt; extractEdgeFeatures() {
+<span class="nc" id="L195">        int w = this.image.getWidth();</span>
+<span class="nc" id="L196">        int h = this.image.getHeight();</span>
+        double featureMatch;
+        
+<span class="nc" id="L199">        float[][] array = this.bufferedImageToArrayWithBounds(this.image,w,h);</span>
+<span class="nc" id="L200">        w+=2; // pridame okraje</span>
+<span class="nc" id="L201">        h+=2;</span>
+        
+<span class="nc" id="L203">        float[][] features = CharacterRecognizer.features;</span>
+        //Vector&lt;Double&gt; output = new Vector&lt;Double&gt;(features.length*4);
+<span class="nc" id="L205">        double[] output = new double[features.length*4];</span>
+        
+<span class="nc bnc" id="L207" title="All 2 branches missed.">        for (int f=0; f&lt;features.length; f++) { // cez vsetky features</span>
+<span class="nc bnc" id="L208" title="All 2 branches missed.">            for (int my=0; my&lt;h-1; my++) {</span>
+<span class="nc bnc" id="L209" title="All 2 branches missed.">                for (int mx=0; mx&lt;w-1; mx++) { // dlazdice x 0,2,4,..8 vcitane</span>
+<span class="nc" id="L210">                    featureMatch = 0;</span>
+<span class="nc" id="L211">                    featureMatch += Math.abs(array[mx][my] - features[f][0]);</span>
+<span class="nc" id="L212">                    featureMatch += Math.abs(array[mx+1][my] - features[f][1]);</span>
+<span class="nc" id="L213">                    featureMatch += Math.abs(array[mx][my+1] - features[f][2]);</span>
+<span class="nc" id="L214">                    featureMatch += Math.abs(array[mx+1][my+1] - features[f][3]);</span>
+                    
+<span class="nc" id="L216">                    int bias = 0;</span>
+<span class="nc bnc" id="L217" title="All 2 branches missed.">                    if (mx &gt;= w/2) bias += features.length; // ak je v kvadrante napravo , posunieme bias o jednu triedu</span>
+<span class="nc bnc" id="L218" title="All 2 branches missed.">                    if (my &gt;= h/2) bias += features.length*2; // ak je v dolnom kvadrante, posuvame bias o 2 triedy</span>
+<span class="nc bnc" id="L219" title="All 2 branches missed.">                    output[bias+f] += featureMatch &lt; 0.05 ? 1 : 0;</span>
+                } // end my
+            } // end mx
+        } // end f
+<span class="nc" id="L223">        Vector&lt;Double&gt; outputVector = new Vector&lt;Double&gt;();</span>
+<span class="nc bnc" id="L224" title="All 2 branches missed.">        for (Double value : output) outputVector.add(value);</span>
+<span class="nc" id="L225">        return outputVector;</span>
+    }
+    
+    public Vector&lt;Double&gt; extractMapFeatures() {
+<span class="fc" id="L229">        Vector&lt;Double&gt; vectorInput = new Vector&lt;Double&gt;();</span>
+<span class="fc bfc" id="L230" title="All 2 branches covered.">        for (int y = 0; y&lt;this.getHeight(); y++)</span>
+<span class="fc bfc" id="L231" title="All 2 branches covered.">            for (int x = 0; x&lt;this.getWidth(); x++)</span>
+<span class="fc" id="L232">                vectorInput.add(new Double(this.getBrightness(x,y)));</span>
+<span class="fc" id="L233">        return vectorInput;</span>
+    }
+    
+    public Vector&lt;Double&gt; extractFeatures() {
+<span class="fc" id="L237">        int featureExtractionMethod = Intelligence.configurator.getIntProperty(&quot;char_featuresExtractionMethod&quot;);</span>
+<span class="pc bpc" id="L238" title="1 of 2 branches missed.">        if (featureExtractionMethod == 0)</span>
+<span class="fc" id="L239">            return this.extractMapFeatures();</span>
+        else 
+<span class="nc" id="L241">            return this.extractEdgeFeatures();</span>
+    }
+    
+    
+}
+
+
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

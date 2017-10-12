@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>HoughTransformation.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.imageanalysis</a> &gt; <span class="el_source">HoughTransformation.java</span></div><h1>HoughTransformation.java</h1><pre class="source lang-java linenums">
+package javaanpr.imageanalysis;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Point;
+import java.awt.image.BufferedImage;
+
+public class HoughTransformation {
+<span class="nc" id="L10">    public static int RENDER_ALL = 1;</span>
+<span class="nc" id="L11">    public static int RENDER_TRANSFORMONLY = 0;</span>
+<span class="nc" id="L12">    public static int COLOR_BW = 0;</span>
+<span class="nc" id="L13">    public static int COLOR_HUE = 1;</span>
+    
+    float[][] bitmap;
+    Point maxPoint;
+    private final int width;
+    private final int height;
+    
+<span class="nc" id="L20">    public float angle = 0;</span>
+<span class="nc" id="L21">    public float dx = 0;</span>
+<span class="nc" id="L22">    public float dy = 0;</span>
+    
+<span class="nc" id="L24">    public HoughTransformation(int width, int height) {</span>
+<span class="nc" id="L25">        this.maxPoint = null;</span>
+<span class="nc" id="L26">        this.bitmap = new float[width][height];</span>
+<span class="nc" id="L27">        this.width = width;</span>
+<span class="nc" id="L28">        this.height = height;</span>
+<span class="nc bnc" id="L29" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++)</span>
+<span class="nc bnc" id="L30" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++)</span>
+<span class="nc" id="L31">                this.bitmap[x][y] = 0;</span>
+<span class="nc" id="L32">    }</span>
+
+    public void addLine(int x, int y, float brightness) {
+        // posunieme suradnicovu sustavu do stredu : -1 .. 1, -1 .. 1
+<span class="nc" id="L36">        float xf = 2*((float)x)/this.width - 1;</span>
+<span class="nc" id="L37">        float yf = 2*((float)y)/this.height - 1;</span>
+        // y=ax + b
+        // b = y - ax
+
+<span class="nc bnc" id="L41" title="All 2 branches missed.">        for (int a=0; a&lt;this.width;a++) {     </span>
+            // posunieme a do stredu
+<span class="nc" id="L43">            float af = 2*((float)a)/this.width - 1;</span>
+            // vypocitame b
+<span class="nc" id="L45">            float bf = yf - af * xf;</span>
+            // b posumieme do povodneho suradnicoveho systemu
+<span class="nc" id="L47">            int b = (int)(  (bf+1)*this.height/2  );</span>
+            
+<span class="nc bnc" id="L49" title="All 4 branches missed.">            if (0 &lt; b &amp;&amp; b &lt; this.height-1) {</span>
+<span class="nc" id="L50">                bitmap[a][b] += brightness;</span>
+            }
+        }
+<span class="nc" id="L53">    }</span>
+  
+    private float getMaxValue() {
+<span class="nc" id="L56">        float maxValue = 0;</span>
+<span class="nc bnc" id="L57" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++) </span>
+<span class="nc bnc" id="L58" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++)</span>
+<span class="nc" id="L59">                maxValue=Math.max(maxValue, this.bitmap[x][y]);</span>
+<span class="nc" id="L60">        return maxValue;</span>
+    }
+    
+    private Point computeMaxPoint() {
+<span class="nc" id="L64">        float max = 0;</span>
+<span class="nc" id="L65">        int maxX = 0, maxY = 0;</span>
+<span class="nc bnc" id="L66" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++)  {</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++) {</span>
+<span class="nc" id="L68">                float curr = this.bitmap[x][y];</span>
+<span class="nc bnc" id="L69" title="All 2 branches missed.">                if (curr &gt;= max) {</span>
+<span class="nc" id="L70">                    maxX = x;</span>
+<span class="nc" id="L71">                    maxY = y;</span>
+<span class="nc" id="L72">                    max = curr;</span>
+                }
+            }
+        }
+<span class="nc" id="L76">        return new Point(maxX, maxY);</span>
+    }
+    public Point getMaxPoint() {
+<span class="nc bnc" id="L79" title="All 2 branches missed.">        if (this.maxPoint == null) this.maxPoint = this.computeMaxPoint();</span>
+<span class="nc" id="L80">        return this.maxPoint;</span>
+    }
+    
+    private float getAverageValue() {
+<span class="nc" id="L84">        float sum = 0;</span>
+<span class="nc bnc" id="L85" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++) </span>
+<span class="nc bnc" id="L86" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++)</span>
+<span class="nc" id="L87">                sum+=this.bitmap[x][y];</span>
+<span class="nc" id="L88">        return sum/(this.width*this.height);</span>
+    }    
+    
+    public BufferedImage render(int renderType, int colorType) {
+        
+<span class="nc" id="L93">        float average = this.getAverageValue();</span>
+<span class="nc" id="L94">        BufferedImage output = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L95">        Graphics2D g = output.createGraphics();</span>
+        
+<span class="nc bnc" id="L97" title="All 2 branches missed.">        for (int x=0; x&lt;this.width; x++) {</span>
+<span class="nc bnc" id="L98" title="All 2 branches missed.">            for (int y=0; y&lt;this.height; y++) {</span>
+<span class="nc" id="L99">                int value = (int)(255 * this.bitmap[x][y] / average/3);</span>
+                //int value = (int)Math.log(this.bitmap[x][y]*1000);
+<span class="nc" id="L101">                value = Math.max(0,Math.min(value,255));</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                if (colorType == HoughTransformation.COLOR_BW) {</span>
+<span class="nc" id="L103">                    output.setRGB(x,y, new Color(value,value,value).getRGB());</span>
+                } else {
+<span class="nc" id="L105">                    output.setRGB(x,y, Color.HSBtoRGB(0.67f - ((float)value/255)*2/3, 1.0f, 1.0f));</span>
+                }
+            }
+        }
+<span class="nc" id="L109">        this.maxPoint = computeMaxPoint();</span>
+<span class="nc" id="L110">        g.setColor(Color.ORANGE);</span>
+        
+        
+<span class="nc" id="L113">        float a = 2*((float)this.maxPoint.x)/this.width - 1;</span>
+<span class="nc" id="L114">        float b = 2*((float)this.maxPoint.y)/this.height - 1;</span>
+        //int b = this.maxPoint.y;
+<span class="nc" id="L116">        float x0f = -1;</span>
+<span class="nc" id="L117">        float y0f = a * x0f + b;</span>
+<span class="nc" id="L118">        float x1f = 1;</span>
+<span class="nc" id="L119">        float y1f = a * x1f + b;</span>
+        
+        
+<span class="nc" id="L122">        int y0 = (int)( (y0f+1)*this.height/2  );</span>
+<span class="nc" id="L123">        int y1 = (int)( (y1f+1)*this.height/2  );</span>
+
+<span class="nc" id="L125">        int dx = this.width;</span>
+<span class="nc" id="L126">        int dy = y1 - y0;</span>
+<span class="nc" id="L127">        this.dx = dx;</span>
+<span class="nc" id="L128">        this.dy = dy;</span>
+<span class="nc" id="L129">        this.angle = (float) (180 * Math.atan(this.dy/this.dx) / Math.PI);</span>
+        
+<span class="nc bnc" id="L131" title="All 2 branches missed.">        if (renderType==HoughTransformation.RENDER_ALL) {</span>
+<span class="nc" id="L132">            g.drawOval(this.maxPoint.x-5, this.maxPoint.y-5, 10,10);</span>
+<span class="nc" id="L133">            g.drawLine(0,this.height/2-(int)dy/2-1,this.width,this.height/2+(int)dy/2-1);</span>
+<span class="nc" id="L134">            g.drawLine(0,this.height/2-(int)dy/2+0,this.width,this.height/2+(int)dy/2+0);</span>
+<span class="nc" id="L135">            g.drawLine(0,this.height/2-(int)dy/2+1,this.width,this.height/2+(int)dy/2+1);</span>
+        }
+        
+<span class="nc" id="L138">        return output;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>

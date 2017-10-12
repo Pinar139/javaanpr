@@ -1,0 +1,412 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="tr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../.resources/report.css" type="text/css"/><link rel="shortcut icon" href="../.resources/report.gif" type="image/gif"/><title>FrameMain.java</title><link rel="stylesheet" href="../.resources/prettify.css" type="text/css"/><script type="text/javascript" src="../.resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../.sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">JaCoCoverage analysis of project &quot;javaanpr&quot; (powered by JaCoCo from EclEmma)</a> &gt; <a href="index.source.html" class="el_package">javaanpr.gui.windows</a> &gt; <span class="el_source">FrameMain.java</span></div><h1>FrameMain.java</h1><pre class="source lang-java linenums">/*
+------------------------------------------------------------------------
+JavaANPR - Automatic Number Plate Recognition System for Java
+------------------------------------------------------------------------
+
+This file is a part of the JavaANPR, licensed under the terms of the
+Educational Community License
+
+Copyright (c) 2006-2007 Ondrej Martinsky. All rights reserved
+
+This Original Work, including software, source code, documents, or
+other related items, is being provided by the copyright holder(s)
+subject to the terms of the Educational Community License. By
+obtaining, using and/or copying this Original Work, you agree that you
+have read, understand, and will comply with the following terms and
+conditions of the Educational Community License:
+
+Permission to use, copy, modify, merge, publish, distribute, and
+sublicense this Original Work and its documentation, with or without
+modification, for any purpose, and without fee or royalty to the
+copyright holder(s) is hereby granted, provided that you include the
+following on ALL copies of the Original Work or portions thereof,
+including modifications or derivatives, that you make:
+
+# The full text of the Educational Community License in a location
+viewable to users of the redistributed or derivative work.
+
+# Any pre-existing intellectual property disclaimers, notices, or terms
+and conditions.
+
+# Notice of any changes or modifications to the Original Work,
+including the date the changes were made.
+
+# Any modifications of the Original Work must be distributed in such a
+manner as to avoid any confusion with the Original Work of the
+copyright holders.
+
+THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+The name and trademarks of copyright holder(s) may NOT be used in
+advertising or publicity pertaining to the Original or Derivative Works
+without specific, written prior permission. Title to copyright in the
+Original Work and any associated documentation will at all times remain
+with the copyright holders. 
+
+If you want to alter upon this work, you MUST attribute it in 
+a) all source files
+b) on every place, where is the copyright of derivated work
+exactly by the following label :
+
+---- label begin ----
+This work is a derivate of the JavaANPR. JavaANPR is a intellectual 
+property of Ondrej Martinsky. Please visit http://javaanpr.sourceforge.net 
+for more info about JavaANPR. 
+----  label end  ----
+
+------------------------------------------------------------------------
+                                         http://javaanpr.sourceforge.net
+------------------------------------------------------------------------
+*/
+
+
+package javaanpr.gui.windows;
+
+import java.awt.Color;
+import java.awt.Component;
+import java.awt.Cursor;
+import java.awt.Dimension;
+import java.awt.Graphics;
+import java.awt.Label;
+import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.swing.JDialog;
+//import javax.sound.midi.SysexMessage;
+import javax.swing.JFileChooser;
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.SwingConstants;
+//import javax.swing.ScrollPaneConstants;
+import javax.swing.filechooser.FileFilter;
+import javaanpr.Main;
+import javaanpr.gui.tools.FileListModel;
+import javaanpr.gui.tools.ImageFileFilter;
+import javaanpr.imageanalysis.CarSnapshot;
+import javaanpr.imageanalysis.Photo;
+
+public class FrameMain extends javax.swing.JFrame {
+    static final long serialVersionUID = 0;
+        
+    public class RecognizeThread extends Thread {
+<span class="fc" id="L100">        FrameMain parentFrame = null;</span>
+        
+<span class="fc" id="L102">        public RecognizeThread(FrameMain parentFrame) {</span>
+<span class="fc" id="L103">            this.parentFrame = parentFrame;</span>
+<span class="fc" id="L104">        }</span>
+        public void run() {
+<span class="fc" id="L106">            String recognizedText = &quot;&quot;;</span>
+<span class="fc" id="L107">            this.parentFrame.recognitionLabel.setText(&quot;processing ...&quot;);</span>
+<span class="fc" id="L108">            int index = this.parentFrame.selectedIndex;</span>
+            try {
+<span class="fc" id="L110">                recognizedText = Main.systemLogic.recognize(this.parentFrame.car);</span>
+<span class="nc" id="L111">            } catch (Exception ex) {</span>
+<span class="nc" id="L112">                this.parentFrame.recognitionLabel.setText(&quot;&quot;);</span>
+<span class="nc" id="L113">                return;</span>
+<span class="fc" id="L114">            }</span>
+<span class="fc" id="L115">            this.parentFrame.recognitionLabel.setText(recognizedText);</span>
+<span class="fc" id="L116">            this.parentFrame.fileListModel.fileList.elementAt(index).recognizedPlate = recognizedText;</span>
+<span class="fc" id="L117">        }</span>
+    }
+    public class LoadImageThread extends Thread {
+<span class="fc" id="L120">        FrameMain parentFrame = null;</span>
+<span class="fc" id="L121">        String url = null;</span>
+<span class="fc" id="L122">        public LoadImageThread(FrameMain parentFrame, String url) {</span>
+<span class="fc" id="L123">            this.parentFrame = parentFrame;</span>
+<span class="fc" id="L124">            this.url = url;</span>
+<span class="fc" id="L125">        }</span>
+        public void run() {
+            try {
+<span class="fc" id="L128">                this.parentFrame.car = new CarSnapshot(url);</span>
+<span class="fc" id="L129">                this.parentFrame.panelCarContent = this.parentFrame.car.duplicate().getBi();</span>
+<span class="fc" id="L130">                this.parentFrame.panelCarContent = Photo.linearResizeBi(this.parentFrame.panelCarContent,</span>
+<span class="fc" id="L131">                        this.parentFrame.panelCar.getWidth(),</span>
+<span class="fc" id="L132">                        this.parentFrame.panelCar.getHeight());</span>
+<span class="fc" id="L133">                this.parentFrame.panelCar.paint(this.parentFrame.panelCar.getGraphics());</span>
+<span class="nc" id="L134">            } catch (IOException ex) {</span>
+<span class="nc" id="L135">                ex.printStackTrace();</span>
+<span class="fc" id="L136">            }</span>
+<span class="fc" id="L137">        }</span>
+    }
+    
+    CarSnapshot car;
+    BufferedImage panelCarContent;
+    
+    JFileChooser fileChooser;
+    private FileListModel fileListModel;
+<span class="fc" id="L145">    int selectedIndex = -1;</span>
+    
+    /** Creates new form MainFrame */
+<span class="fc" id="L148">    public FrameMain() {</span>
+<span class="fc" id="L149">        initComponents();</span>
+        
+        // init : file chooser
+<span class="fc" id="L152">        this.fileChooser = new JFileChooser();</span>
+<span class="fc" id="L153">        this.fileChooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);</span>
+<span class="fc" id="L154">        this.fileChooser.setFileFilter(new ImageFileFilter());</span>
+        
+        // init : window dimensions and visibility
+<span class="fc" id="L157">        Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();</span>
+<span class="fc" id="L158">        int width = this.getWidth();</span>
+<span class="fc" id="L159">        int height = this.getHeight();</span>
+<span class="fc" id="L160">        this.setLocation((screenSize.width - width)/2,(screenSize.height - height)/2);</span>
+<span class="fc" id="L161">        this.setVisible(true);</span>
+<span class="fc" id="L162">    }</span>
+    
+    /** This method is called from within the constructor to
+     * initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is
+     * always regenerated by the Form Editor.
+     */
+    // &lt;editor-fold defaultstate=&quot;collapsed&quot; desc=&quot;Generated Code&quot;&gt;//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+<span class="fc" id="L172">        recognitionLabel = new javax.swing.JLabel();</span>
+<span class="fc" id="L173">        panelCar = new JPanel() {</span>
+            static final long serialVersionUID = 0;
+            public void paint(Graphics g) {
+<span class="fc" id="L176">                super.paint(g);</span>
+<span class="fc" id="L177">                g.drawImage(panelCarContent,0,0,null);</span>
+<span class="fc" id="L178">            }</span>
+        };
+<span class="fc" id="L180">        fileListScrollPane = new javax.swing.JScrollPane();</span>
+<span class="fc" id="L181">        fileList = new javax.swing.JList();</span>
+<span class="fc" id="L182">        recognizeButton = new javax.swing.JButton();</span>
+<span class="fc" id="L183">        bottomLine = new javax.swing.JLabel();</span>
+<span class="fc" id="L184">        menuBar = new javax.swing.JMenuBar();</span>
+<span class="fc" id="L185">        imageMenu = new javax.swing.JMenu();</span>
+<span class="fc" id="L186">        openDirectoryItem = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L187">        exitItem = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L188">        helpMenu = new javax.swing.JMenu();</span>
+<span class="fc" id="L189">        aboutItem = new javax.swing.JMenuItem();</span>
+<span class="fc" id="L190">        helpItem = new javax.swing.JMenuItem();</span>
+
+<span class="fc" id="L192">        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);</span>
+<span class="fc" id="L193">        setTitle(&quot;Otomatik Plaka Tan�mlama Sistemi&quot;);</span>
+<span class="fc" id="L194">        setResizable(false);</span>
+
+<span class="fc" id="L196">        recognitionLabel.setBackground(new java.awt.Color(0, 0, 0));</span>
+<span class="fc" id="L197">        recognitionLabel.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 24)); // NOI18N</span>
+<span class="fc" id="L198">        recognitionLabel.setForeground(new java.awt.Color(255, 204, 51));</span>
+<span class="fc" id="L199">        recognitionLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);</span>
+<span class="fc" id="L200">        recognitionLabel.setText(&quot;null&quot;);</span>
+<span class="fc" id="L201">        recognitionLabel.setBorder(javax.swing.BorderFactory.createEtchedBorder());</span>
+<span class="fc" id="L202">        recognitionLabel.setOpaque(true);</span>
+
+<span class="fc" id="L204">        panelCar.setBackground(new java.awt.Color(0, 153, 255));</span>
+<span class="fc" id="L205">        panelCar.setBorder(javax.swing.BorderFactory.createEtchedBorder());</span>
+
+<span class="fc" id="L207">        org.jdesktop.layout.GroupLayout panelCarLayout = new org.jdesktop.layout.GroupLayout(panelCar);</span>
+<span class="fc" id="L208">        panelCar.setLayout(panelCarLayout);</span>
+<span class="fc" id="L209">        panelCarLayout.setHorizontalGroup(</span>
+<span class="fc" id="L210">            panelCarLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)</span>
+<span class="fc" id="L211">            .add(0, 585, Short.MAX_VALUE)</span>
+        );
+<span class="fc" id="L213">        panelCarLayout.setVerticalGroup(</span>
+<span class="fc" id="L214">            panelCarLayout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)</span>
+<span class="fc" id="L215">            .add(0, 477, Short.MAX_VALUE)</span>
+        );
+
+<span class="fc" id="L218">        fileListScrollPane.setBorder(javax.swing.BorderFactory.createEtchedBorder());</span>
+<span class="fc" id="L219">        fileListScrollPane.setVerticalScrollBarPolicy(javax.swing.ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);</span>
+
+<span class="fc" id="L221">        fileList.setBackground(javax.swing.UIManager.getDefaults().getColor(&quot;Panel.background&quot;));</span>
+<span class="fc" id="L222">        fileList.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L223">        fileList.addListSelectionListener(new javax.swing.event.ListSelectionListener() {</span>
+            public void valueChanged(javax.swing.event.ListSelectionEvent evt) {
+<span class="fc" id="L225">                fileListValueChanged(evt);</span>
+<span class="fc" id="L226">            }</span>
+        });
+<span class="fc" id="L228">        fileListScrollPane.setViewportView(fileList);</span>
+
+<span class="fc" id="L230">        recognizeButton.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L231">        recognizeButton.setText(&quot;Plakay� tan�&quot;);</span>
+<span class="fc" id="L232">        recognizeButton.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="fc" id="L234">                recognizeButtonActionPerformed(evt);</span>
+<span class="fc" id="L235">            }</span>
+        });
+
+<span class="fc" id="L238">        bottomLine.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L239">        bottomLine.setText(&quot;Copyright (c) 2017 P�nar M�n�kl�&quot;);</span>
+
+<span class="fc" id="L241">        menuBar.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+
+<span class="fc" id="L243">        imageMenu.setText(&quot;Image&quot;);</span>
+<span class="fc" id="L244">        imageMenu.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+
+<span class="fc" id="L246">        openDirectoryItem.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L247">        openDirectoryItem.setText(&quot;Load snapshots from directory&quot;);</span>
+<span class="fc" id="L248">        openDirectoryItem.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="fc" id="L250">                openDirectoryItemActionPerformed(evt);</span>
+<span class="fc" id="L251">            }</span>
+        });
+<span class="fc" id="L253">        imageMenu.add(openDirectoryItem);</span>
+
+<span class="fc" id="L255">        exitItem.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L256">        exitItem.setText(&quot;Exit&quot;);</span>
+<span class="fc" id="L257">        exitItem.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L259">                exitItemActionPerformed(evt);</span>
+<span class="nc" id="L260">            }</span>
+        });
+<span class="fc" id="L262">        imageMenu.add(exitItem);</span>
+
+<span class="fc" id="L264">        menuBar.add(imageMenu);</span>
+
+<span class="fc" id="L266">        helpMenu.setText(&quot;Help&quot;);</span>
+<span class="fc" id="L267">        helpMenu.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L268">        helpMenu.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L270">                helpMenuActionPerformed(evt);</span>
+<span class="nc" id="L271">            }</span>
+        });
+
+<span class="fc" id="L274">        aboutItem.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L275">        aboutItem.setText(&quot;About&quot;);</span>
+<span class="fc" id="L276">        aboutItem.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="fc" id="L278">                aboutItemActionPerformed(evt);</span>
+<span class="fc" id="L279">            }</span>
+        });
+<span class="fc" id="L281">        helpMenu.add(aboutItem);</span>
+
+<span class="fc" id="L283">        helpItem.setFont(new java.awt.Font(&quot;Arial&quot;, 0, 11)); // NOI18N</span>
+<span class="fc" id="L284">        helpItem.setText(&quot;Help&quot;);</span>
+<span class="fc" id="L285">        helpItem.addActionListener(new java.awt.event.ActionListener() {</span>
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+<span class="nc" id="L287">                helpItemActionPerformed(evt);</span>
+<span class="nc" id="L288">            }</span>
+        });
+<span class="fc" id="L290">        helpMenu.add(helpItem);</span>
+
+<span class="fc" id="L292">        menuBar.add(helpMenu);</span>
+
+<span class="fc" id="L294">        setJMenuBar(menuBar);</span>
+
+<span class="fc" id="L296">        org.jdesktop.layout.GroupLayout layout = new org.jdesktop.layout.GroupLayout(getContentPane());</span>
+<span class="fc" id="L297">        getContentPane().setLayout(layout);</span>
+<span class="fc" id="L298">        layout.setHorizontalGroup(</span>
+<span class="fc" id="L299">            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)</span>
+<span class="fc" id="L300">            .add(layout.createSequentialGroup()</span>
+<span class="fc" id="L301">                .addContainerGap()</span>
+<span class="fc" id="L302">                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)</span>
+<span class="fc" id="L303">                    .add(org.jdesktop.layout.GroupLayout.LEADING, bottomLine, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 589, Short.MAX_VALUE)</span>
+<span class="fc" id="L304">                    .add(org.jdesktop.layout.GroupLayout.LEADING, panelCar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))</span>
+<span class="fc" id="L305">                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)</span>
+<span class="fc" id="L306">                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.TRAILING)</span>
+<span class="fc" id="L307">                    .add(fileListScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE)</span>
+<span class="fc" id="L308">                    .add(org.jdesktop.layout.GroupLayout.LEADING, recognitionLabel, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE)</span>
+<span class="fc" id="L309">                    .add(recognizeButton, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 190, Short.MAX_VALUE))</span>
+<span class="fc" id="L310">                .addContainerGap())</span>
+        );
+<span class="fc" id="L312">        layout.setVerticalGroup(</span>
+<span class="fc" id="L313">            layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)</span>
+<span class="fc" id="L314">            .add(layout.createSequentialGroup()</span>
+<span class="fc" id="L315">                .addContainerGap()</span>
+<span class="fc" id="L316">                .add(layout.createParallelGroup(org.jdesktop.layout.GroupLayout.LEADING)</span>
+<span class="fc" id="L317">                    .add(layout.createSequentialGroup()</span>
+<span class="fc" id="L318">                        .add(fileListScrollPane, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, 402, Short.MAX_VALUE)</span>
+<span class="fc" id="L319">                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)</span>
+<span class="fc" id="L320">                        .add(recognizeButton)</span>
+<span class="fc" id="L321">                        .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)</span>
+<span class="fc" id="L322">                        .add(recognitionLabel, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE, 44, org.jdesktop.layout.GroupLayout.PREFERRED_SIZE))</span>
+<span class="fc" id="L323">                    .add(panelCar, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, org.jdesktop.layout.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))</span>
+<span class="fc" id="L324">                .addPreferredGap(org.jdesktop.layout.LayoutStyle.RELATED)</span>
+<span class="fc" id="L325">                .add(bottomLine))</span>
+        );
+
+<span class="fc" id="L328">        pack();</span>
+<span class="fc" id="L329">    }// &lt;/editor-fold&gt;//GEN-END:initComponents</span>
+
+    private void helpMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_helpMenuActionPerformed
+// TODO add your handling code here:
+<span class="nc" id="L333">    }//GEN-LAST:event_helpMenuActionPerformed</span>
+
+    private void helpItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_helpItemActionPerformed
+<span class="nc" id="L336">        new FrameHelp(FrameHelp.SHOW_HELP);</span>
+<span class="nc" id="L337">    }//GEN-LAST:event_helpItemActionPerformed</span>
+
+    private void aboutItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_aboutItemActionPerformed
+<span class="fc" id="L340">        new FrameHelp(FrameHelp.SHOW_ABOUT);</span>
+<span class="fc" id="L341">    }//GEN-LAST:event_aboutItemActionPerformed</span>
+    
+    private void recognizeButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_recognizeButtonActionPerformed
+<span class="fc" id="L344">        String plate = null;</span>
+        
+        // namiesto tohto urobime thread plate = Main.systemLogic.recognize(this.car);
+        // thread code start
+<span class="fc" id="L348">        new RecognizeThread(this).start();</span>
+        // thread code end
+        
+//            this.fileListModel.fileList.elementAt(this.selectedIndex).recognizedPlate = plate;
+//            this.label.setText(plate);
+        
+<span class="fc" id="L354">    }//GEN-LAST:event_recognizeButtonActionPerformed</span>
+    
+    private void fileListValueChanged(javax.swing.event.ListSelectionEvent evt) {//GEN-FIRST:event_fileListValueChanged
+<span class="fc" id="L357">        int selectedNow = this.fileList.getSelectedIndex();</span>
+        
+<span class="pc bpc" id="L359" title="1 of 4 branches missed.">        if (selectedNow != -1 &amp;&amp; this.selectedIndex != selectedNow) {</span>
+<span class="fc" id="L360">            this.recognitionLabel.setText(this.fileListModel.fileList.elementAt(selectedNow).recognizedPlate);</span>
+<span class="fc" id="L361">            this.selectedIndex = selectedNow;</span>
+            // proceed selectedNow
+<span class="fc" id="L363">            String path = ((FileListModel.FileListModelEntry)this.fileListModel.getElementAt(selectedNow)).fullPath;</span>
+            //this.showImage(path);
+<span class="fc" id="L365">            new LoadImageThread(this,path).start();</span>
+        }
+<span class="fc" id="L367">    }//GEN-LAST:event_fileListValueChanged</span>
+    
+    private void exitItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_exitItemActionPerformed
+<span class="nc" id="L370">        System.exit(0);</span>
+<span class="nc" id="L371">    }//GEN-LAST:event_exitItemActionPerformed</span>
+        
+    private void openDirectoryItemActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openDirectoryItemActionPerformed
+        int returnValue;
+        String fileURL;
+        
+<span class="fc" id="L377">        this.fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);</span>
+<span class="fc" id="L378">        this.fileChooser.setDialogTitle(&quot;Load snapshots from directory&quot;);</span>
+<span class="fc" id="L379">        returnValue = this.fileChooser.showOpenDialog((Component)evt.getSource());</span>
+        
+<span class="pc bpc" id="L381" title="1 of 2 branches missed.">        if (returnValue != this.fileChooser.APPROVE_OPTION) return;</span>
+        
+<span class="fc" id="L383">        fileURL = this.fileChooser.getSelectedFile().getAbsolutePath();</span>
+<span class="fc" id="L384">        File selectedFile = new File(fileURL);</span>
+        
+<span class="fc" id="L386">        this.fileListModel = new FileListModel();</span>
+<span class="fc bfc" id="L387" title="All 2 branches covered.">        for (String fileName : selectedFile.list()) {</span>
+<span class="pc bpc" id="L388" title="1 of 2 branches missed.">            if (!ImageFileFilter.accept(fileName)) continue; // not a image</span>
+<span class="fc" id="L389">            this.fileListModel.addFileListModelEntry(fileName, selectedFile+File.separator+fileName);</span>
+        }
+<span class="fc" id="L391">        this.fileList.setModel(fileListModel);</span>
+        
+<span class="fc" id="L393">    }//GEN-LAST:event_openDirectoryItemActionPerformed</span>
+    
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JMenuItem aboutItem;
+    private javax.swing.JLabel bottomLine;
+    private javax.swing.JMenuItem exitItem;
+    private javax.swing.JList fileList;
+    private javax.swing.JScrollPane fileListScrollPane;
+    private javax.swing.JMenuItem helpItem;
+    private javax.swing.JMenu helpMenu;
+    private javax.swing.JMenu imageMenu;
+    private javax.swing.JMenuBar menuBar;
+    private javax.swing.JMenuItem openDirectoryItem;
+    private javax.swing.JPanel panelCar;
+    private javax.swing.JLabel recognitionLabel;
+    private javax.swing.JButton recognizeButton;
+    // End of variables declaration//GEN-END:variables
+    
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.eclemma.org/jacoco">JaCoCo</a> 0.7.5.201505241946</span></div></body></html>
